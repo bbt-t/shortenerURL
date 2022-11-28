@@ -8,30 +8,25 @@ import (
 	"time"
 )
 
-type RedisClient struct {
-	client *redis.Client
-}
-
 func RedisClientConnect() *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", configs.NewConfRedis().RedisHOST, configs.NewConfRedis().RedisPORT),
-		Password: configs.NewConfRedis().RedisPASS,
+		Addr:     fmt.Sprintf("%s:%s", configs.NewConfig().ServerAddress, configs.NewConfig().RedisPORT),
+		Password: configs.NewConfig().RedisPASS,
 		DB:       0,
 	})
 }
 
 var ctx = context.Background()
 
-func (r RedisClient) SaveURL(k, v string) error {
-	err := r.client.Set(ctx, k, v, 20*time.Second).Err()
+func SaveNewUrlRedis(rdb *redis.Client, k, v string) {
+	err := rdb.Set(ctx, k, v, 20*time.Second).Err()
 	if err != nil {
-		fmt.Printf("ERROR : %s", err)
+		panic(err)
 	}
-	return err
 }
 
-func (r RedisClient) GetURL(k string) (string, error) {
-	val, err := r.client.Get(ctx, k).Result()
+func PullOutUrlRedis(rdb *redis.Client, k string) (string, error) {
+	val, err := rdb.Get(ctx, k).Result()
 	if err == redis.Nil {
 		return "", err
 	}
