@@ -37,6 +37,7 @@ func (h ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Requ
 		log.Printf("ERROR : %s", err)
 		http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
 	}
+	fmt.Println(rUrl)
 	w.Header().Set("Location", rUrl)
 	http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
 }
@@ -53,20 +54,22 @@ func (h ServerHandler) TakeAndSendUrl(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR: %s", err)
 	}
 	toHashVar := fmt.Sprintf("%d", pkg.HashShortening([]byte(value.URL)))
+
 	if err := h.store.SaveURL(toHashVar, value.URL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
-	resp := Resp{
-		Result: configs.NewConfServ().BaseURL + "/" + toHashVar,
-	}
-	res, err := json.Marshal(resp)
-	if err != nil {
-		panic(err)
-	}
+	//resp := Resp{
+	//	Result: configs.NewConfServ().BaseURL + "/" + toHashVar,
+	//}
+	//res, err := json.Marshal(resp)
+	//if err != nil {
+	//	panic(err)
+	//}
+	resp := []byte(configs.NewConfServ().BaseURL + "/" + toHashVar)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if _, err := w.Write(res); err != nil {
+	if _, err := w.Write(resp); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 }
