@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 )
 
 type ServerHandler struct {
@@ -31,11 +30,12 @@ func NewHandlerServer(s st.DBRepo) *ServerHandler {
 }
 
 func (h ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
-	p := strings.Split(r.URL.Path, "/")[1]
+	//p := strings.Split(r.URL.Path, "/")[1]
+	p := chi.URLParam(r, "id")
 	rUrl, err := h.store.GetURL(p)
 	if err != nil {
 		log.Printf("ERROR : %s", err)
-		http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
+		http.NotFound(w, r)
 	}
 	w.Header().Set("Location", rUrl)
 	http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
