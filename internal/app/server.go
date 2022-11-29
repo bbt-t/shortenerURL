@@ -37,7 +37,6 @@ func (h ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Requ
 		log.Printf("ERROR : %s", err)
 		http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
 	}
-	fmt.Println(rUrl)
 	w.Header().Set("Location", rUrl)
 	http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
 }
