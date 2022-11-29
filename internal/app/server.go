@@ -31,14 +31,13 @@ func NewHandlerServer(s st.DBRepo) *ServerHandler {
 
 func (h ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
 	//p := strings.Split(r.URL.Path, "/")[1]
-	p := chi.URLParam(r, "id")
-	rUrl, err := h.store.GetURL(p)
-	if err != nil {
+	if originalURL, err := h.store.GetURL(chi.URLParam(r, "id")); err != nil {
 		log.Printf("ERROR : %s", err)
 		http.NotFound(w, r)
+	} else {
+		w.Header().Set("Location", originalURL)
+		http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
 	}
-	w.Header().Set("Location", rUrl)
-	http.Redirect(w, r, rUrl, http.StatusTemporaryRedirect)
 }
 
 func (h ServerHandler) TakeAndSendUrl(w http.ResponseWriter, r *http.Request) {
@@ -64,11 +63,11 @@ func (h ServerHandler) TakeAndSendUrl(w http.ResponseWriter, r *http.Request) {
 	//if err != nil {
 	//	panic(err)
 	//}
-	resp := []byte(configs.NewConfServ().BaseURL + "/" + toHashVar)
+	shortURL := []byte(configs.NewConfServ().BaseURL + "/" + toHashVar)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if _, err := w.Write(resp); err != nil {
+	if _, err := w.Write(shortURL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 }
