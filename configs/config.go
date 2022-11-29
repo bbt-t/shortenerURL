@@ -10,11 +10,14 @@ import (
 type ServerCfg struct {
 	ServerAddress string
 	BaseURL       string
-	RedisPASS     string
-	RedisPORT     string
 }
 
 func NewConfServ() *ServerCfg {
+	/*
+		Initialize a new conf. Values are taken from .env file.
+		If .env file does not exist or the required value does not exist,
+		then default values are substituted.
+	*/
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal(err)
 	}
@@ -40,6 +43,11 @@ type RedisConfig struct {
 }
 
 func NewConfRedis() *RedisConfig {
+	/*
+		Initialize a new Redis conf. Values are taken from .env file.
+		If .env file does not exist or the required value does not exist,
+		then default values are substituted.
+	*/
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal(err)
 	}
@@ -63,6 +71,11 @@ type SQLiteConfig struct {
 }
 
 func NewConfSQLite() *SQLiteConfig {
+	/*
+		Initialize a new SQLite DB conf. Values are taken from .env file.
+		If .env file does not exist or the required value does not exist,
+		then default values are substituted.
+	*/
 	var name string
 
 	if err := godotenv.Load(".env"); err != nil {

@@ -26,6 +26,9 @@ func NewDBSqlite() *DBSqlite {
 }
 
 func (d DBSqlite) CreateSchema() {
+	/*
+		Create a table in DB if it doesn't exist.
+	*/
 	stmt, _ := d.db.Prepare("CREATE TABLE IF NOT EXISTS items (id VARCHAR(8), url VARCHAR(512), create_at TIMESTAMP NOT NULL)")
 	defer stmt.Close()
 	if _, err := stmt.Exec(); err != nil {
@@ -34,6 +37,10 @@ func (d DBSqlite) CreateSchema() {
 }
 
 func (d DBSqlite) SaveURL(k, v string) error {
+	/*
+		Adding info to the DB.
+		return: Error or nil
+	*/
 	stmt, _ := d.db.Prepare("INSERT INTO items (id, url, create_at) VALUES (?, ?, ?)")
 	defer stmt.Close()
 	_, err := stmt.Exec(k, v, time.Now())
@@ -44,6 +51,11 @@ func (d DBSqlite) SaveURL(k, v string) error {
 }
 
 func (d DBSqlite) GetURL(k string) (string, error) {
+	/*
+		Search for info by ID.
+		param k: id by which we search in the DB
+		return: result (or "") and error (or nil)
+	*/
 	var result string
 
 	stmt, _ := d.db.Prepare("SELECT url FROM items WHERE id = ?")

@@ -11,6 +11,10 @@ import (
 )
 
 func main() {
+	/*
+		"Application entry point".
+		Create table in DB and start the http-server.
+	*/
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("Panic occurred : %s", err)
