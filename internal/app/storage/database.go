@@ -15,6 +15,10 @@ type DBSqlite struct {
 }
 
 func NewDBSqlite() *DBSqlite {
+	/*
+		Initializing the SQLite DB.
+		return: DB object
+	*/
 	db, err := sql.Open("sqlite3", configs.NewConfSQLite().DBName)
 	if err != nil {
 		log.Printf("ERROR : %s", err)

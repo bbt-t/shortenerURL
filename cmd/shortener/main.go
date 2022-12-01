@@ -23,8 +23,11 @@ func main() {
 		}
 	}()
 
-	db := storage.NewDBSqlite()
-	db.CreateTable()
+	// HACK
+	//db := storage.NewDBSqlite()
+	//db.CreateTable()
+
+	db := storage.NewMapDBPlug()
 
 	cfg := configs.NewConfServ()
 	h := app.NewHandlerServer(db)

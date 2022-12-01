@@ -95,10 +95,10 @@ type PGConfig struct {
 }
 
 func NewConfPG() *PGConfig {
+	//TODO Fully implement
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal(err)
 	}
-
 	return &PGConfig{
 		DBUrl: fmt.Sprintf(
 			"host=%s dbname=%s user=%s password=%s sslmode=disable",
