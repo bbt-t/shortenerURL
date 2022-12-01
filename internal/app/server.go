@@ -3,13 +3,15 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/configs"
-	st "github.com/bbt-t/shortenerURL/internal/app/storage"
-	"github.com/bbt-t/shortenerURL/pkg"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/bbt-t/shortenerURL/configs"
+	st "github.com/bbt-t/shortenerURL/internal/app/storage"
+	"github.com/bbt-t/shortenerURL/pkg"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type ServerHandler struct {
@@ -32,15 +34,13 @@ func NewHandlerServer(s st.DBRepo) *ServerHandler {
 	return &h
 }
 
-func (h ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for redirecting to original URL.
 		Get ID from the route  -> search for the original url in DB:
 			if it's found -> redirect
 			if not -> 404
 	*/
-
-	//p := strings.Split(r.URL.Path, "/")[1]
 	if originalURL, err := h.store.GetURL(chi.URLParam(r, "id")); err != nil {
 		log.Printf("ERROR : %s", err)
 		http.NotFound(w, r)
@@ -50,7 +50,7 @@ func (h ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (h ServerHandler) TakeAndSendUrl(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) TakeAndSendUrl(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for getting URL to shortened.
 		Received, run through the HASH-func and write (hash, original url)

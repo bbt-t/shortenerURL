@@ -2,9 +2,10 @@ package configs
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type ServerCfg struct {

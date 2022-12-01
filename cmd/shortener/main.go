@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/bbt-t/shortenerURL/configs"
 	"github.com/bbt-t/shortenerURL/internal/app"
 	"github.com/bbt-t/shortenerURL/internal/app/storage"
+
 	_ "github.com/mattn/go-sqlite3"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -22,7 +24,7 @@ func main() {
 	}()
 
 	db := storage.NewDBSqlite()
-	db.CreateSchema()
+	db.CreateTable()
 
 	cfg := configs.NewConfServ()
 	h := app.NewHandlerServer(db)

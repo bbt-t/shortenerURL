@@ -3,10 +3,11 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/configs"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"time"
+
+	"github.com/bbt-t/shortenerURL/configs"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type DBSqlite struct {
@@ -25,7 +26,7 @@ func NewDBSqlite() *DBSqlite {
 	return &DBSqlite{db}
 }
 
-func (d DBSqlite) CreateSchema() {
+func (d DBSqlite) CreateTable() {
 	/*
 		Create a table in DB if it doesn't exist.
 	*/

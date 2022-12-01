@@ -3,9 +3,11 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/configs"
-	"github.com/go-redis/redis/v9"
 	"time"
+
+	"github.com/bbt-t/shortenerURL/configs"
+
+	"github.com/go-redis/redis/v9"
 )
 
 type RedisClient struct {
