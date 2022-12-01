@@ -27,9 +27,9 @@ func (m *MapDBPlug) GetURL(k string) (string, error) {
 	defer m.mutex.Unlock()
 
 	m.mutex.Lock()
-	result, IsOk := m.mapURL[k]
+	result, ok := m.mapURL[k]
 
-	if IsOk == false {
+	if ok == false {
 		return "", errors.New("no such id in DB")
 	}
 	return result, nil
@@ -40,9 +40,9 @@ func (m *MapDBPlug) SaveURL(k, v string) error {
 		Write info to the map by key - value.
 	*/
 	m.mutex.Lock()
-	_, IsOk := m.mapURL[k]
+	_, ok := m.mapURL[k]
 	m.mutex.Unlock()
-	if IsOk == true {
+	if ok == true {
 		return nil
 	}
 

@@ -30,7 +30,7 @@ func NewHandlerServer(s st.DBRepo) *ServerHandler {
 	}
 
 	h.Chi.Get("/{id}", h.RedirectToOriginalURL)
-	h.Chi.Post("/", h.TakeAndSendUrl)
+	h.Chi.Post("/", h.TakeAndSendURL)
 	return &h
 }
 
@@ -50,7 +50,7 @@ func (h *ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *ServerHandler) TakeAndSendUrl(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for getting URL to shortened.
 		Received, run through the HASH-func and write (hash, original url)

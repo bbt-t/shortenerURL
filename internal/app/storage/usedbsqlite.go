@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bbt-t/shortenerURL/configs"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -27,18 +28,14 @@ func NewDBSqlite() *DBSqlite {
 	if err != nil {
 		fmt.Println(err)
 	}
-	return &DBSqlite{db}
-}
 
-func (d DBSqlite) CreateTable() {
-	/*
-		Create a table in DB if it doesn't exist.
-	*/
-	stmt, _ := d.db.Prepare("CREATE TABLE IF NOT EXISTS items (id VARCHAR(8), url VARCHAR(512), create_at TIMESTAMP NOT NULL)")
+	stmt, _ := db.Prepare("CREATE TABLE IF NOT EXISTS items (id VARCHAR(8), url VARCHAR(512), create_at TIMESTAMP NOT NULL)")
 	defer stmt.Close()
 	if _, err := stmt.Exec(); err != nil {
 		log.Printf("ERRER : %s", err)
 	}
+
+	return &DBSqlite{db}
 }
 
 func (d DBSqlite) SaveURL(k, v string) error {
