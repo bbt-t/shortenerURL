@@ -72,7 +72,13 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR : %s", err)
 	}
 
-	shortURL := []byte(configs.NewConfServ().BaseURL + "/" + toHashVar)
+	shortURL := []byte(
+		fmt.Sprintf(
+			"http://%s:%s/%s",
+			configs.NewConfServ().ServerAddress,
+			configs.NewConfServ().Port,
+			toHashVar,
+		))
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

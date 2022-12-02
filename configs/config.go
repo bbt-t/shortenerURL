@@ -12,8 +12,6 @@ import (
 type ServerCfg struct {
 	ServerAddress string `toml:"address"`
 	Port          string `toml:"port"`
-	BaseURL       string `toml:"baseurl"`
-	LogLevel      string `toml:"loglevel"`
 }
 
 func NewConfServ() *ServerCfg {

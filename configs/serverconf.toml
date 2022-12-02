@@ -1,6 +1,5 @@
 address = "127.0.0.1"
-Port = "8088"
-baseurl = "http://127.0.0.1:8080"
+port = "8080"
 loglevel = "debug"
 
 redis_host = "127.0.0.1"
