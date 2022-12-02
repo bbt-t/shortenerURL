@@ -5,12 +5,15 @@ import (
 	"log"
 	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/joho/godotenv"
 )
 
 type ServerCfg struct {
-	ServerAddress string
-	BaseURL       string
+	ServerAddress string `toml:"address"`
+	Port          string `toml:"port"`
+	BaseURL       string `toml:"baseurl"`
+	LogLevel      string `toml:"loglevel"`
 }
 
 func NewConfServ() *ServerCfg {
@@ -19,27 +22,17 @@ func NewConfServ() *ServerCfg {
 		If .env file does not exist or the required value does not exist,
 		then default values are substituted.
 	*/
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal(err)
+	var conf ServerCfg
+	_, err := toml.DecodeFile("./configs/serverconf.toml", &conf)
+	if err != nil {
+		log.Printf("ERROR : %s", err)
 	}
-
-	sa := os.Getenv("SERVER_ADDRESS")
-	bu := os.Getenv("BASE_URL")
-	if sa == "" {
-		sa = "127.0.0.1"
-	}
-	if bu == "" {
-		bu = "http://127.0.0.1:8080"
-	}
-	return &ServerCfg{
-		ServerAddress: sa,
-		BaseURL:       bu,
-	}
+	return &conf
 }
 
 type RedisConfig struct {
-	RedisHOST string
-	RedisPORT string
+	RedisHOST string `toml:"redis_host"`
+	RedisPORT string `toml:"redis_port"`
 	RedisPASS string
 }
 
@@ -52,23 +45,17 @@ func NewConfRedis() *RedisConfig {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Fatal(err)
 	}
-	rh := os.Getenv("REDIS_HOST")
-	rp := os.Getenv("REDIS_PORT")
-	if rh == "" {
-		rh = "127.0.0.1"
+	var db RedisConfig
+	_, err := toml.DecodeFile("./configs/serverconf.toml", &db)
+	if err != nil {
+		log.Printf("ERROR : %s", err)
 	}
-	if rp == "" {
-		rp = "6379"
-	}
-	return &RedisConfig{
-		RedisHOST: rh,
-		RedisPASS: os.Getenv("REDIS_PASS"),
-		RedisPORT: rp,
-	}
+	db.RedisPASS = os.Getenv("REDIS_PASS")
+	return &db
 }
 
 type SQLiteConfig struct {
-	DBName string
+	DBName string `toml:"db_file_name"`
 }
 
 func NewConfSQLite() *SQLiteConfig {
@@ -77,17 +64,12 @@ func NewConfSQLite() *SQLiteConfig {
 		If .env file does not exist or the required value does not exist,
 		then default values are substituted.
 	*/
-	var name string
-
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal(err)
+	var db SQLiteConfig
+	_, err := toml.DecodeFile("./configs/serverconf.toml", &db)
+	if err != nil {
+		log.Printf("ERROR : %s", err)
 	}
-	if name = os.Getenv("DB_NAME"); name == "" {
-		name = "./DefaultDBName.db"
-	}
-	return &SQLiteConfig{
-		DBName: name,
-	}
+	return &db
 }
 
 type PGConfig struct {

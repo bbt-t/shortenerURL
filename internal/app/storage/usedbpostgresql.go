@@ -2,7 +2,6 @@ package storage
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/configs"
@@ -25,7 +24,7 @@ func NewDBPostgres() *DBPostgres {
 	}
 	err = db.Ping()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	return &DBPostgres{db}
 }

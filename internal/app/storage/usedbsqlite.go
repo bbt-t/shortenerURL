@@ -2,7 +2,6 @@ package storage
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -26,7 +25,7 @@ func NewDBSqlite() *DBSqlite {
 	}
 	err = db.Ping()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	stmt, _ := db.Prepare("CREATE TABLE IF NOT EXISTS items (id VARCHAR(8), url VARCHAR(512), create_at TIMESTAMP NOT NULL)")
@@ -66,5 +65,6 @@ func (d DBSqlite) GetURL(k string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return result, nil
 }

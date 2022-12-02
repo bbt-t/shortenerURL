@@ -26,22 +26,30 @@ func main() {
 	var db storage.DBRepo
 	var inpFlagParam string
 
-	cfg := configs.NewConfServ()
-
 	flag.StringVar(&inpFlagParam, "db", "none", `
-	"select database: no flag - use map, 'sqlite' - use SQLite, 'pg' - Postgresql."
+	"select database: no flag - use map, 'sqlite' - use SQLite, 'pg' - Postgresql, 'redis' - Redis"
 	`)
 	flag.Parse()
 
 	switch inpFlagParam {
 	case "sqlite":
+		log.Println("USED SQL")
 		db = storage.NewDBSqlite()
 	case "pg":
+		log.Println("USED PG")
 		db = storage.NewDBPostgres()
+	case "redis":
+		log.Println("USED REDIS")
+		db = storage.NewRedisConnect()
 	default:
+		log.Println("USED MAP")
 		db = storage.NewMapDBPlug()
 	}
 
+	cfg := configs.NewConfServ()
 	h := app.NewHandlerServer(db)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:8080", cfg.ServerAddress), h.Chi))
+
+	log.Println("---> RUN SERVER <---")
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", cfg.ServerAddress, cfg.Port), h.Chi))
 }

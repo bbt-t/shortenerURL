@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/bbt-t/shortenerURL/configs"
@@ -14,15 +15,17 @@ type RedisClient struct {
 	client *redis.Client
 }
 
-func RedisClientConnect() *redis.Client {
+func NewRedisConnect() *RedisClient {
 	/*
 		Connect to Redis.
 	*/
-	return redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", configs.NewConfRedis().RedisHOST, configs.NewConfRedis().RedisPORT),
-		Password: configs.NewConfRedis().RedisPASS,
-		DB:       0,
-	})
+	return &RedisClient{
+		client: redis.NewClient(&redis.Options{
+			Addr:     fmt.Sprintf("%s:%s", configs.NewConfRedis().RedisHOST, configs.NewConfRedis().RedisPORT),
+			Password: configs.NewConfRedis().RedisPASS,
+			DB:       0,
+		}),
+	}
 }
 
 func (r RedisClient) SaveURL(k, v string) error {
@@ -32,7 +35,7 @@ func (r RedisClient) SaveURL(k, v string) error {
 	ctx := context.Background()
 	err := r.client.Set(ctx, k, v, 20*time.Second).Err()
 	if err != nil {
-		fmt.Printf("ERROR : %s", err)
+		log.Printf("ERROR : %s", err)
 	}
 	return err
 }
