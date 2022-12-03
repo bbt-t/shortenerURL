@@ -12,7 +12,6 @@ import (
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/go-chi/chi/v5"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type ServerHandler struct {
@@ -58,6 +57,7 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 		to the DB and (hash only) response Body, sent response.
 	*/
 	var value CreateShortURLRequest
+	var shortURL []byte
 	cfg := configs.NewConfServ()
 
 	defer r.Body.Close()
@@ -68,19 +68,19 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	if err := json.Unmarshal(payload, &value); err != nil {
 		log.Printf("ERROR: %s", err)
 	}
-	toHashVar := fmt.Sprintf("%d", pkg.HashShortening([]byte(value.URL)))
 
-	if err := h.store.SaveURL(toHashVar, value.URL); err != nil {
-		log.Printf("ERROR : %s", err)
+	if pkg.URLValidation(value.URL) == true {
+		toHashVar := fmt.Sprintf("%d", pkg.HashShortening([]byte(value.URL)))
+
+		if err := h.store.SaveURL(toHashVar, value.URL); err != nil {
+			log.Printf("ERROR : %s", err)
+		}
+
+		shortURL = []byte(
+			fmt.Sprintf(
+				"http://%s:%s/%s", cfg.ServerAddress, cfg.Port, toHashVar),
+		)
 	}
-
-	shortURL := []byte(
-		fmt.Sprintf(
-			"http://%s:%s/%s",
-			cfg.ServerAddress,
-			cfg.Port,
-			toHashVar,
-		))
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

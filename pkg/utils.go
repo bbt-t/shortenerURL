@@ -3,6 +3,7 @@ package pkg
 import (
 	"hash/fnv"
 	"log"
+	"net/url"
 )
 
 func HashShortening(s []byte) uint32 {
@@ -16,4 +17,15 @@ func HashShortening(s []byte) uint32 {
 		log.Fatalf("ERROR : %s", err)
 	}
 	return hash.Sum32()
+}
+
+func URLValidation(inpURL string) bool {
+	/*
+		URL validation.
+	*/
+	_, err := url.ParseRequestURI(inpURL)
+	if err != nil {
+		log.Println(err)
+	}
+	return nil == err
 }
