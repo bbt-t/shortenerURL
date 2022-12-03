@@ -19,10 +19,11 @@ func NewRedisConnect() *RedisClient {
 	/*
 		Connect to Redis.
 	*/
+	cfg := configs.NewConfRedis()
 	return &RedisClient{
 		client: redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%s", configs.NewConfRedis().RedisHOST, configs.NewConfRedis().RedisPORT),
-			Password: configs.NewConfRedis().RedisPASS,
+			Addr:     fmt.Sprintf("%s:%s", cfg.RedisHOST, cfg.RedisPORT),
+			Password: cfg.RedisPASS,
 			DB:       0,
 		}),
 	}

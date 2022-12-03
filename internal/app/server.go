@@ -12,6 +12,7 @@ import (
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/go-chi/chi/v5"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type ServerHandler struct {
@@ -57,6 +58,7 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 		to the DB and (hash only) response Body, sent response.
 	*/
 	var value CreateShortURLRequest
+	cfg := configs.NewConfServ()
 
 	defer r.Body.Close()
 	payload, errReadBody := io.ReadAll(r.Body)
@@ -75,8 +77,8 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	shortURL := []byte(
 		fmt.Sprintf(
 			"http://%s:%s/%s",
-			configs.NewConfServ().ServerAddress,
-			configs.NewConfServ().Port,
+			cfg.ServerAddress,
+			cfg.Port,
 			toHashVar,
 		))
 
@@ -85,4 +87,38 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(shortURL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
+}
+
+func Start(inpFlagParam string) {
+	/*
+		Parse param, choice of storage to use and start the http-server.
+	*/
+	var db st.DBRepo
+
+	switch inpFlagParam {
+	case "sqlite":
+		log.Println("USED SQL")
+		db = st.NewDBSqlite()
+	case "pg":
+		log.Println("USED PG")
+		db = st.NewDBPostgres()
+	case "redis":
+		log.Println("USED REDIS")
+		db = st.NewRedisConnect()
+	default:
+		log.Println("USED MAP")
+		db = st.NewMapDBPlug()
+	}
+
+	cfg := configs.NewConfServ()
+	h := NewHandlerServer(db)
+
+	log.Println("---> RUN SERVER <---")
+
+	log.Fatal(
+		http.ListenAndServe(
+			fmt.Sprintf("%s:%s", cfg.ServerAddress, cfg.Port),
+			h.Chi,
+		),
+	)
 }
