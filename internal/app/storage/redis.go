@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -49,8 +50,20 @@ func (r RedisClient) GetURL(k string) (string, error) {
 	*/
 	ctx := context.Background()
 	val, err := r.client.Get(ctx, k).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return "", err
 	}
 	return val, nil
+}
+
+func (r RedisClient) Ping() error {
+	ctx := context.Background()
+
+	status := r.client.Ping(ctx)
+	err := status.Err()
+
+	if err != nil {
+		log.Println(err)
+	}
+	return err
 }

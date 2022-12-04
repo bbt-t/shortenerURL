@@ -68,3 +68,11 @@ func (d DBSqlite) GetURL(k string) (string, error) {
 
 	return result, nil
 }
+
+func (d DBSqlite) Ping() error {
+	err := d.db.Ping()
+	if err != nil {
+		log.Println(err)
+	}
+	return err
+}

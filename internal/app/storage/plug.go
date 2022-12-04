@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"log"
 	"sync"
 )
 
@@ -49,5 +50,10 @@ func (m *MapDBPlug) SaveURL(k, v string) error {
 	m.mutex.Lock()
 	m.mapURL[k] = v
 	m.mutex.Unlock()
+	return nil
+}
+
+func (m *MapDBPlug) Ping() error {
+	log.Println("MAP IS READY!")
 	return nil
 }

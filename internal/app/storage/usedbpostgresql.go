@@ -51,3 +51,11 @@ func (d DBPostgres) SaveURL(k, v string) error {
 func (d DBPostgres) GetURL(k string) (string, error) {
 	return "", nil
 }
+
+func (d DBPostgres) Ping() error {
+	err := d.db.Ping()
+	if err != nil {
+		log.Println(err)
+	}
+	return err
+}

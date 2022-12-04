@@ -91,7 +91,9 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 
 func Start(inpFlagParam string) {
 	/*
-		Parse param, choice of storage to use and start the http-server.
+		Get param, choice of storage to use
+		(if the selected storage is not available, then the MAP is selected)
+		and start the http-server.
 	*/
 	var db st.DBRepo
 
@@ -108,6 +110,11 @@ func Start(inpFlagParam string) {
 	default:
 		log.Println("USED MAP")
 		db = st.NewMapDBPlug()
+	}
+
+	if err := db.Ping(); err != nil {
+		db = st.NewMapDBPlug()
+		log.Println("--->>> SWITCH TO MAP")
 	}
 
 	cfg := configs.NewConfServ()
