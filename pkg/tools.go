@@ -51,7 +51,7 @@ func SendMessage(msg string) {
 	// Write correct telegram/chat id (var idToSend)
 	var idToSend int64
 	idToSend = 88005553535
-	telegramService.AddReceivers(idToSend)
+	telegramService.AddReceivers(idToSend /* to whom send */)
 	notify.UseServices(telegramService)
 
 	if err := notify.Send(

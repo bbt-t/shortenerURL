@@ -21,7 +21,7 @@ type ServerHandler struct {
 	store st.DBRepo
 }
 
-type CreateShortURLRequest struct {
+type createShortURLRequest struct {
 	URL string `json:"url"`
 }
 
@@ -62,7 +62,7 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 		Received, run through the HASH-func and write (hash, original url)
 		to the DB and (hash only) response Body, sent response.
 	*/
-	var value CreateShortURLRequest
+	var value createShortURLRequest
 	var shortURL []byte
 	cfg := configs.NewConfServ()
 
