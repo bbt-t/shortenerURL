@@ -4,7 +4,6 @@ import (
 	"flag"
 
 	"github.com/bbt-t/shortenerURL/internal/app"
-	"github.com/bbt-t/shortenerURL/pkg"
 	_ "github.com/bbt-t/shortenerURL/pkg/logging"
 )
 
@@ -19,6 +18,6 @@ func main() {
 	"select database: no flag - use map, 'sqlite' - use SQLite, 'pg' - Postgresql, 'redis' - Redis"
 	`)
 	flag.Parse()
-	pkg.StopNotifyAdmin()
+	// pkg.StopNotifyAdmin()
 	app.Start(inpFlagParam)
 }

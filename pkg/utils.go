@@ -48,7 +48,10 @@ func SendMessage(msg string) {
 	}
 
 	telegramService, _ := telegram.New(os.Getenv("BOT_TOKEN"))
-	telegramService.AddReceivers(2018211211)
+	// Write correct telegram/chat id (var idToSend)
+	var idToSend int64
+	idToSend = 88005553535
+	telegramService.AddReceivers(idToSend)
 	notify.UseServices(telegramService)
 
 	_ = notify.Send(
