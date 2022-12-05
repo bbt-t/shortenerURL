@@ -10,11 +10,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type DBSqlite struct {
+type dbSqlite struct {
 	db *sql.DB
 }
 
-func NewDBSqlite() *DBSqlite {
+func NewDBSqlite() DBRepo {
 	/*
 		Initializing the SQLite DB.
 		return: DB object
@@ -34,10 +34,10 @@ func NewDBSqlite() *DBSqlite {
 		log.Printf("ERRER : %s", err)
 	}
 
-	return &DBSqlite{db}
+	return &dbSqlite{db}
 }
 
-func (d DBSqlite) SaveURL(k, v string) error {
+func (d *dbSqlite) SaveURL(k, v string) error {
 	/*
 		Adding info to the DB.
 		return: Error or nil
@@ -51,7 +51,7 @@ func (d DBSqlite) SaveURL(k, v string) error {
 	return err
 }
 
-func (d DBSqlite) GetURL(k string) (string, error) {
+func (d *dbSqlite) GetURL(k string) (string, error) {
 	/*
 		Search for info by ID.
 		param k: id by which we search in the DB
@@ -69,7 +69,7 @@ func (d DBSqlite) GetURL(k string) (string, error) {
 	return result, nil
 }
 
-func (d DBSqlite) Ping() error {
+func (d *dbSqlite) Ping() error {
 	err := d.db.Ping()
 	if err != nil {
 		log.Println(err)

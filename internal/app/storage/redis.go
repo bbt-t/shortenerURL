@@ -12,16 +12,16 @@ import (
 	"github.com/go-redis/redis/v9"
 )
 
-type RedisClient struct {
+type redisClient struct {
 	client *redis.Client
 }
 
-func NewRedisConnect() *RedisClient {
+func NewRedisConnect() DBRepo {
 	/*
 		Connect to Redis.
 	*/
 	cfg := configs.NewConfRedis()
-	return &RedisClient{
+	return &redisClient{
 		client: redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%s", cfg.RedisHOST, cfg.RedisPORT),
 			Password: cfg.RedisPASS,
@@ -30,7 +30,7 @@ func NewRedisConnect() *RedisClient {
 	}
 }
 
-func (r RedisClient) SaveURL(k, v string) error {
+func (r *redisClient) SaveURL(k, v string) error {
 	/*
 		Write key - value to Redis.
 	*/
@@ -42,7 +42,7 @@ func (r RedisClient) SaveURL(k, v string) error {
 	return err
 }
 
-func (r RedisClient) GetURL(k string) (string, error) {
+func (r *redisClient) GetURL(k string) (string, error) {
 	/*
 		Get value by key.
 		param k: search key
@@ -56,7 +56,7 @@ func (r RedisClient) GetURL(k string) (string, error) {
 	return val, nil
 }
 
-func (r RedisClient) Ping() error {
+func (r *redisClient) Ping() error {
 	ctx := context.Background()
 
 	status := r.client.Ping(ctx)

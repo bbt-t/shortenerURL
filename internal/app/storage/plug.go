@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type MapDBPlug struct {
+type mapDBPlug struct {
 	/*
 		Simple DB stub.
 	*/
@@ -18,10 +18,10 @@ func NewMapDBPlug() DBRepo {
 	/*
 		return: object with an empty map to write data.
 	*/
-	return &MapDBPlug{mapURL: map[string]string{}}
+	return &mapDBPlug{mapURL: map[string]string{}}
 }
 
-func (m *MapDBPlug) GetURL(k string) (string, error) {
+func (m *mapDBPlug) GetURL(k string) (string, error) {
 	/*
 		Get info from the map by key.
 	*/
@@ -36,7 +36,7 @@ func (m *MapDBPlug) GetURL(k string) (string, error) {
 	return result, nil
 }
 
-func (m *MapDBPlug) SaveURL(k, v string) error {
+func (m *mapDBPlug) SaveURL(k, v string) error {
 	/*
 		Write info to the map by key - value.
 	*/
@@ -53,7 +53,7 @@ func (m *MapDBPlug) SaveURL(k, v string) error {
 	return nil
 }
 
-func (m *MapDBPlug) Ping() error {
+func (m *mapDBPlug) Ping() error {
 	log.Println("MAP IS READY!")
 	return nil
 }

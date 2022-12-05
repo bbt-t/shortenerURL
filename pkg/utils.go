@@ -54,11 +54,13 @@ func SendMessage(msg string) {
 	telegramService.AddReceivers(idToSend)
 	notify.UseServices(telegramService)
 
-	_ = notify.Send(
+	if err := notify.Send(
 		context.Background(),
-		"Shortener service",
+		"📩 SHORTENER SERVICE 🔊",
 		msg,
-	)
+	); err != nil {
+		log.Printf("ERROR : %v", err)
+	}
 }
 
 func StopNotifyAdmin() {
