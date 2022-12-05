@@ -9,6 +9,8 @@ import (
 
 	"github.com/bbt-t/shortenerURL/configs"
 	st "github.com/bbt-t/shortenerURL/internal/app/storage"
+	"github.com/bbt-t/shortenerURL/internal/app/storage/nosqldb"
+	"github.com/bbt-t/shortenerURL/internal/app/storage/sqldb"
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/go-chi/chi/v5"
@@ -17,6 +19,10 @@ import (
 type ServerHandler struct {
 	Chi   *chi.Mux
 	store st.DBRepo
+}
+
+type CreateShortURLRequest struct {
+	URL string `json:"url"`
 }
 
 func NewHandlerServer(s st.DBRepo) *ServerHandler {
@@ -100,13 +106,13 @@ func Start(inpFlagParam string) {
 	switch inpFlagParam {
 	case "sqlite":
 		log.Println("USED SQL")
-		db = st.NewDBSqlite()
+		db = sqldb.NewDBSqlite()
 	case "pg":
 		log.Println("USED PG")
-		db = st.NewDBPostgres()
+		db = sqldb.NewDBPostgres()
 	case "redis":
 		log.Println("USED REDIS")
-		db = st.NewRedisConnect()
+		db = nosqldb.NewRedisConnect()
 	default:
 		log.Println("USED MAP")
 		db = st.NewMapDBPlug()
