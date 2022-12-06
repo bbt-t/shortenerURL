@@ -1,10 +1,9 @@
-package nosqldb
+package storage
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/internal/app/storage"
 	"log"
 	"time"
 
@@ -17,7 +16,7 @@ type redisClient struct {
 	client *redis.Client
 }
 
-func NewRedisConnect() storage.DBRepo {
+func NewRedisConnect() DBRepo {
 	/*
 		Connect to Redis.
 	*/

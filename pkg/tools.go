@@ -38,7 +38,7 @@ func URLValidation(inpURL string) bool {
 	return nil == err
 }
 
-func SendMessage(msg string) {
+func SendMessage[T int | int64](idToSend T, msg string) {
 	/*
 		Send message via telegram bot. Need BOT_TOKEN and recipient id.
 		param msg: message to be sent
@@ -49,9 +49,7 @@ func SendMessage(msg string) {
 
 	telegramService, _ := telegram.New(os.Getenv("BOT_TOKEN"))
 	// Write correct telegram/chat id (var idToSend)
-	var idToSend int64
-	idToSend = 88005553535
-	telegramService.AddReceivers(idToSend /* to whom send */)
+	telegramService.AddReceivers(int64(idToSend) /* to whom send */)
 	notify.UseServices(telegramService)
 
 	if err := notify.Send(
@@ -78,7 +76,7 @@ func StopNotifyAdmin() {
 			case syscall.SIGINT:
 				fallthrough
 			case syscall.SIGTERM:
-				SendMessage("STOPPED")
+				//SendMessage(id, "STOPPED")
 				os.Exit(1)
 			}
 		}

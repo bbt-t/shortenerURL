@@ -1,33 +1,44 @@
-package sqldb
+package storage
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/configs"
-	"github.com/bbt-t/shortenerURL/internal/app/storage"
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type dbSqlite struct {
+type sqlDatabase struct {
 	db *sqlx.DB
 }
 
-func NewDBSqlite() storage.DBRepo {
+func NewSQLDatabase(nameDB string) DBRepo {
 	/*
-		Initializing the SQLite DB.
+		Initializing the SQL DB.
 		return: DB object
 	*/
-	db := dbConnect("sqlite3", configs.NewConfSQLite().DBName)
-	if err := db.Ping(); err != nil {
-		log.Println(err)
+	var param string
+
+	switch nameDB {
+	case "sqlite":
+		nameDB = fmt.Sprintf("%s3", nameDB)
+		param = configs.NewConfSQLite().DBName
+	case "postgres":
+		param = configs.NewConfPG().DBUrl
 	}
+
+	db, err := sqlx.Connect(nameDB, param)
+	if err != nil {
+		log.Printf("ERROR : %s", err)
+		return nil
+	}
+
 	createTable(db, _tableItems /* SQL command */)
-	return &dbSqlite{db}
+	return &sqlDatabase{db: db}
 }
 
-func (d *dbSqlite) SaveURL(k, v string) error {
+func (d *sqlDatabase) SaveURL(k, v string) error {
 	/*
 		Adding info to the DB.
 		return: Error or nil
@@ -36,7 +47,7 @@ func (d *dbSqlite) SaveURL(k, v string) error {
 	return err
 }
 
-func (d *dbSqlite) GetURL(k string) (string, error) {
+func (d *sqlDatabase) GetURL(k string) (string, error) {
 	/*
 		Search for info by ID.
 		param k: id by which we search in the DB
@@ -49,12 +60,12 @@ func (d *dbSqlite) GetURL(k string) (string, error) {
 	return result, nil
 }
 
-func (d *dbSqlite) Ping() error {
+func (d *sqlDatabase) Ping() error {
 	err := d.db.Ping()
 	if err != nil {
 		log.Println(err)
 	} else {
-		log.Println("SQLite is READY!")
+		log.Println("SQL DB is READY!")
 	}
 	return err
 }

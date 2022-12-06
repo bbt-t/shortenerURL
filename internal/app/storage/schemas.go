@@ -1,4 +1,4 @@
-package sqldb
+package storage
 
 const _tableItems = `
 CREATE TABLE IF NOT EXISTS items (

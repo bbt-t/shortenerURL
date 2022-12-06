@@ -9,8 +9,6 @@ import (
 
 	"github.com/bbt-t/shortenerURL/configs"
 	st "github.com/bbt-t/shortenerURL/internal/app/storage"
-	"github.com/bbt-t/shortenerURL/internal/app/storage/nosqldb"
-	"github.com/bbt-t/shortenerURL/internal/app/storage/sqldb"
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/go-chi/chi/v5"
@@ -103,31 +101,19 @@ func Start(inpFlagParam string) {
 	*/
 	var db st.DBRepo
 
-	switch inpFlagParam {
-	case "sqlite":
-		log.Println("USED SQL")
-		db = sqldb.NewDBSqlite()
-	case "pg":
-		log.Println("USED PG")
-		db = sqldb.NewDBPostgres()
-	case "redis":
-		log.Println("USED REDIS")
-		db = nosqldb.NewRedisConnect()
-	default:
-		log.Println("USED MAP")
-		db = st.NewMapDBPlug()
+	if inpFlagParam != "redis" {
+		db = st.NewSQLDatabase(inpFlagParam /* flag for choice DB */)
+	} else {
+		db = st.NewRedisConnect()
 	}
-
-	if err := db.Ping(); err != nil {
+	if nil == db {
 		db = st.NewMapDBPlug()
 		log.Println("--->>> SWITCH TO MAP")
 	}
 
 	cfg := configs.NewConfServ()
 	h := NewHandlerServer(db)
-
 	log.Println("---> RUN SERVER <---")
-
 	log.Fatal(
 		http.ListenAndServe(
 			fmt.Sprintf("%s:%s", cfg.ServerAddress, cfg.Port),
