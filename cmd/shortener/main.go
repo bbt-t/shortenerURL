@@ -19,5 +19,5 @@ func main() {
 	`)
 	flag.Parse()
 	// pkg.StopNotifyAdmin()
-	app.Start(inpFlagParam)
+	app.Start(inpFlagParam /* received flag or nothing ("") */)
 }

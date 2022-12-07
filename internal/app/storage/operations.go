@@ -8,7 +8,7 @@ import (
 )
 
 func createTable(db *sqlx.DB, schema string) {
-	db.MustExec(schema)
+	db.MustExec(schema /* SQL commands */)
 	log.Println("SCHEMA CREATED")
 }
 

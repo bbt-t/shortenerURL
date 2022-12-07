@@ -33,12 +33,12 @@ func NewHandlerServer(s st.DBRepo) *ServerHandler {
 		store: s,
 	}
 
-	h.Chi.Get("/{id}", h.RedirectToOriginalURL)
-	h.Chi.Post("/", h.TakeAndSendURL)
+	h.Chi.Get("/{id}", h.redirectToOriginalURL)
+	h.Chi.Post("/", h.takeAndSendURL)
 	return &h
 }
 
-func (h *ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) redirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for redirecting to original URL.
 		Get ID from the route  -> search for the original url in DB:
@@ -54,13 +54,13 @@ func (h *ServerHandler) RedirectToOriginalURL(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for getting URL to shortened.
 		Received, run through the HASH-func and write (hash, original url)
 		to the DB and (hash only) response Body, sent response.
 	*/
-	var value createShortURLRequest
+	var shortURLRequest createShortURLRequest
 	var shortURL []byte
 	cfg := configs.NewConfServ()
 
@@ -69,20 +69,20 @@ func (h *ServerHandler) TakeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	if errReadBody != nil {
 		log.Printf("ERROR : %s", errReadBody)
 	}
-	if err := json.Unmarshal(payload, &value); err != nil {
+	if err := json.Unmarshal(payload, &shortURLRequest); err != nil {
 		log.Printf("ERROR: %s", err)
 	}
 
-	if pkg.URLValidation(value.URL) == true {
-		toHashVar := fmt.Sprintf("%d", pkg.HashShortening([]byte(value.URL)))
+	if pkg.URLValidation(shortURLRequest.URL) == true {
+		hashedVal := fmt.Sprintf("%d", pkg.HashShortening([]byte(shortURLRequest.URL)))
 
-		if err := h.store.SaveURL(toHashVar, value.URL); err != nil {
+		if err := h.store.SaveURL(hashedVal, shortURLRequest.URL); err != nil {
 			log.Printf("ERROR : %s", err)
 		}
 
 		shortURL = []byte(
 			fmt.Sprintf(
-				"http://%s:%s/%s", cfg.ServerAddress, cfg.Port, toHashVar),
+				"http://%s:%s/%s", cfg.ServerAddress, cfg.Port, hashedVal),
 		)
 	}
 

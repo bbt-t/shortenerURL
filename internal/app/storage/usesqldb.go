@@ -10,13 +10,15 @@ import (
 )
 
 type sqlDatabase struct {
+	// Single struct for SQLite and PG.
 	db *sqlx.DB
 }
 
 func NewSQLDatabase(nameDB string) DBRepo {
 	/*
-		Initializing the SQL DB.
-		return: DB object
+		Selects sql-db and initializing. Create tables.
+		param nameDB: received parameter (flag) to select db
+		return: db-object or nil
 	*/
 	var param string
 
@@ -25,12 +27,13 @@ func NewSQLDatabase(nameDB string) DBRepo {
 		nameDB = fmt.Sprintf("%s3", nameDB)
 		param = configs.NewConfSQLite().DBName
 	case "postgres":
+		nameDB = "postgres"
 		param = configs.NewConfPG().DBUrl
 	}
 
 	db, err := sqlx.Connect(nameDB, param)
 	if err != nil {
-		log.Printf("ERROR : %s", err)
+		log.Printf("ERROR : %s", DBNotSelected /* custom error */)
 		return nil
 	}
 
