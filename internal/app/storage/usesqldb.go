@@ -33,7 +33,7 @@ func NewSQLDatabase(nameDB string) DBRepo {
 
 	db, err := sqlx.Connect(nameDB, param)
 	if err != nil {
-		log.Printf("ERROR : %s", DBNotSelected /* custom error */)
+		log.Printf("ERROR : %s", ErrDBNotSelected /* custom error */)
 		return nil
 	}
 

@@ -30,7 +30,7 @@ func (m *mapDBPlug) GetURL(k string) (string, error) {
 	m.mutex.Lock()
 	result, ok := m.mapURL[k]
 
-	if ok == false {
+	if !ok {
 		return "", errors.New("no such id in DB")
 	}
 	return result, nil
@@ -43,7 +43,7 @@ func (m *mapDBPlug) SaveURL(k, v string) error {
 	m.mutex.Lock()
 	_, ok := m.mapURL[k]
 	m.mutex.Unlock()
-	if ok == true {
+	if ok {
 		return nil
 	}
 

@@ -2,4 +2,4 @@ package storage
 
 import "errors"
 
-var DBNotSelected = errors.New("database not selected")
+var ErrDBNotSelected = errors.New("database not selected")
