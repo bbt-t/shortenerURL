@@ -2,14 +2,16 @@ package app
 
 import (
 	"fmt"
-	"github.com/bbt-t/shortenerURL/configs"
-	"github.com/bbt-t/shortenerURL/pkg"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/bbt-t/shortenerURL/configs"
+	"github.com/bbt-t/shortenerURL/pkg"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func (h *ServerHandler) redirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
@@ -52,25 +54,20 @@ func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	if originalURL == "" {
 		originalURL = string(payload)
 	}
-	//if !pkg.URLValidation(originalURL) {
-	//	http.Error(
-	//		w,
-	//		fmt.Sprintf("Incorrent URL: %s", payload),
-	//		http.StatusBadRequest,
-	//	)
-	//}
+
 	hashedVal := fmt.Sprintf("%d", pkg.HashShortening([]byte(originalURL)))
 
 	if err := h.store.SaveURL(hashedVal, originalURL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
 	shortURL := []byte(
 		fmt.Sprintf(
 			"http://%v:%v/%v", cfg.ServerAddress, cfg.Port, hashedVal),
 	)
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusCreated)
 	if _, err := w.Write(shortURL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}

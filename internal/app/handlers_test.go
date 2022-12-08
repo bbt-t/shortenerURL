@@ -1,11 +1,12 @@
 package app
 
 import (
-	"github.com/bbt-t/shortenerURL/internal/app/storage"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/bbt-t/shortenerURL/internal/app/storage"
 )
 
 type Fields struct {
