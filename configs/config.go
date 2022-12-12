@@ -28,11 +28,11 @@ func NewConfServ() *ServerCfg {
 	*/
 	var cfg ServerCfg
 
-	// TODO: REMOVE PART ->
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal(err)
-	}
-	////////////////////////
+	// TODO: REMOVE PART ->                          //
+	//if err := godotenv.Load(".env"); err != nil {  //
+	//	log.Fatal(err)								 //
+	//}												 //
+	///////////////////////////////////////////////////
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
