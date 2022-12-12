@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -9,29 +8,48 @@ import (
 	st "github.com/bbt-t/shortenerURL/internal/app/storage"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 type ServerHandler struct {
 	Chi   *chi.Mux
 	store st.DBRepo
+	cfg   configs.ServerCfg
 }
 
-func NewHandlerServer(s st.DBRepo) *ServerHandler {
+func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 	/*
 		Initialize the server and add routes.
 	*/
+	allowedCharsets := []string{"UTF-8", "Latin-1", ""}
+
 	router := chi.NewRouter()
 	h := ServerHandler{
 		Chi:   router,
 		store: s,
+		cfg:   cfg,
 	}
 
+	h.Chi.Use(middleware.Logger)
+	h.Chi.Use(middleware.Recoverer)
+
+	h.Chi.Use(middleware.CleanPath)
+	h.Chi.Use(middleware.RedirectSlashes)
+
+	h.Chi.Use(middleware.ContentCharset(allowedCharsets...))
+	h.Chi.Use(middleware.AllowContentType("application/json", "text/plain"))
+	h.Chi.Use(middleware.AllowContentEncoding("deflate", "gzip"))
+
+	h.Chi.Use(middleware.Compress(5, "application/json", "text/plain"))
+
 	h.Chi.Get("/{id}", h.redirectToOriginalURL)
+	h.Chi.Post("/api/shorten", h.takeAndSendURLJson)
 	h.Chi.Post("/", h.takeAndSendURL)
+
 	return &h
 }
 
-func Start(inpFlagParam string) {
+func Start(cfg *configs.ServerCfg) {
 	/*
 		Get param, choice of storage to use
 		(if the selected storage is not available, then the MAP is selected)
@@ -39,23 +57,22 @@ func Start(inpFlagParam string) {
 	*/
 	var db st.DBRepo
 
-	if inpFlagParam != "redis" {
-		db = st.NewSQLDatabase(inpFlagParam /* flag for choice DB */)
+	if cfg.FilePath != "" {
+		log.Println("WITH FILE STORAGE --->>>")
+		db = st.NewFileDB(cfg.FilePath)
 	} else {
-		db = st.NewRedisConnect()
-	}
-	if nil == db {
-		db = st.NewMapDBPlug()
-		log.Println("--->>> SWITCH TO MAP")
+		if cfg.UseDB != "redis" {
+			db = st.NewSQLDatabase(cfg.UseDB)
+		} else {
+			db = st.NewRedisConnect()
+		}
+		if nil == db {
+			db = st.NewMapDBPlug()
+			log.Println("--->>> SWITCH TO MAP")
+		}
 	}
 
-	cfg := configs.NewConfServ()
-	h := NewHandlerServer(db)
+	h := NewHandlerServer(db, *cfg)
 	log.Println("---> RUN SERVER <---")
-	log.Fatal(
-		http.ListenAndServe(
-			fmt.Sprintf("%s:%s", cfg.ServerAddress, cfg.Port),
-			h.Chi,
-		),
-	)
+	log.Fatal(http.ListenAndServe(cfg.ServerAddress, h.Chi))
 }

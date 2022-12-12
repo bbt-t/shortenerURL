@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"errors"
 	"log"
 	"sync"
 )
@@ -18,12 +17,15 @@ func NewMapDBPlug() DBRepo {
 	/*
 		return: object with an empty map to write data.
 	*/
-	return &mapDBPlug{mapURL: map[string]string{}}
+	return &mapDBPlug{
+		mapURL: map[string]string{},
+		mutex:  sync.Mutex{},
+	}
 }
 
 func (m *mapDBPlug) GetURL(k string) (string, error) {
 	/*
-		Get info from the map by key.
+		get info from the map by key.
 	*/
 	defer m.mutex.Unlock()
 
@@ -31,7 +33,7 @@ func (m *mapDBPlug) GetURL(k string) (string, error) {
 	result, ok := m.mapURL[k]
 
 	if !ok {
-		return "", errors.New("no such id in DB")
+		return "", errDBUnknownID
 	}
 	return result, nil
 }

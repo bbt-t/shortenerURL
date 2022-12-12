@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/bbt-t/shortenerURL/configs"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -33,7 +34,7 @@ func NewSQLDatabase(nameDB string) DBRepo {
 
 	db, err := sqlx.Connect(nameDB, param)
 	if err != nil {
-		log.Printf("ERROR : %s", ErrDBNotSelected /* custom error */)
+		log.Print(errDBNotSelected /* custom error */)
 		return nil
 	}
 

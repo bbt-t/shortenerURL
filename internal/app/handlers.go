@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -8,7 +9,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bbt-t/shortenerURL/configs"
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/go-chi/chi/v5"
@@ -17,8 +17,7 @@ import (
 func (h *ServerHandler) redirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for redirecting to original URL.
-		Get ID from the route  -> search for the original url in DB:
-			if it's found -> redirect
+		get ID from the route  -> search for the original url in DB:
 			if not -> 404
 	*/
 	if originalURL, err := h.store.GetURL(chi.URLParam(r, "id")); err != nil {
@@ -37,8 +36,6 @@ func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
 		Received, run through the HASH-func and write (hash, original url)
 		to the DB and (hash only) response Body, sent response.
 	*/
-	cfg := configs.NewConfServ()
-
 	defer r.Body.Close()
 	payload, _ := io.ReadAll(r.Body)
 	query, err := url.ParseQuery(string(payload))
@@ -61,14 +58,62 @@ func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR : %s", err)
 	}
 
-	shortURL := []byte(
-		fmt.Sprintf(
-			"http://%v:%v/%v", cfg.ServerAddress, cfg.Port, hashedVal),
-	)
+	shortURL := []byte(fmt.Sprintf("%v/%v", h.cfg.BaseURL, hashedVal))
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	if _, err := w.Write(shortURL); err != nil {
+		log.Printf("ERROR : %s", err)
+	}
+}
+
+func (h *ServerHandler) takeAndSendURLJson(w http.ResponseWriter, r *http.Request) {
+	/*
+		Comes -> json object {"url": "original_url"}
+		Coming out <- response {"result": "shorten_url"}
+	*/
+	var req ReqURL
+	var resp RespURL
+
+	defer r.Body.Close()
+	payload, errBody := io.ReadAll(r.Body)
+	if errBody != nil {
+		http.Error(
+			w,
+			fmt.Sprintf("Incorrent request body: %s", payload),
+			http.StatusBadRequest,
+		)
+		return
+	}
+	if err := json.Unmarshal(payload, &req); err != nil {
+		log.Print(err)
+		http.Error(
+			w,
+			fmt.Sprintf("Impossible unmarshal request : %s", err),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+	originalURL := strings.TrimSpace(req.URL) // remove spaces
+	if originalURL == "" {
+		originalURL = string(payload)
+	}
+	hashedVal := fmt.Sprintf("%d", pkg.HashShortening([]byte(originalURL)))
+
+	if err := h.store.SaveURL(hashedVal, originalURL); err != nil {
+		log.Printf("ERROR : %s", err)
+	}
+	shortURL := fmt.Sprintf("%v/%v", h.cfg.BaseURL, hashedVal)
+
+	resp.URL = shortURL
+	result, err := json.Marshal(resp)
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if _, err := w.Write(result); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 }

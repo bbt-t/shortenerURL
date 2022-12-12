@@ -6,3 +6,7 @@ CREATE TABLE IF NOT EXISTS items (
     url VARCHAR(512), 
     create_at TIMESTAMP NOT NULL
 )`
+
+type FileDBSchema struct {
+	SaveDB map[string]string `json:"db_saved"`
+}

@@ -44,7 +44,7 @@ func (r *redisClient) SaveURL(k, v string) error {
 
 func (r *redisClient) GetURL(k string) (string, error) {
 	/*
-		Get value by key.
+		get value by key.
 		param k: search key
 		return: found value and error (or nil)
 	*/
