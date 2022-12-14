@@ -7,8 +7,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/caarlos0/env/v6"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 type ServerCfg struct {
@@ -26,35 +24,14 @@ func NewConfServ() *ServerCfg {
 	*/
 	var cfg ServerCfg
 
+	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
+	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
+	flag.StringVar(&cfg.FilePath, "f", "", "file path")
+	flag.Parse()
+
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-
-	flag.String("db", "none", `
-	"select database: no flag - use map, 'sqlite' - use SQLite, 'pg' - Postgresql, 'redis' - Redis"
-	`)
-	flag.String("a", "", "server address")
-	flag.String("b", "", "base url")
-	flag.String("f", "", "file path")
-
-	pflag.Parse()
-	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
-		log.Fatal(err)
-	}
-
-	if cfg.ServerAddress == "" {
-		cfg.ServerAddress = viper.GetString("a")
-	}
-	if cfg.BaseURL == "" {
-		cfg.BaseURL = viper.GetString("b")
-	}
-	if cfg.FilePath == "" {
-		cfg.FilePath = viper.GetString("f")
-	}
-	if cfg.UseDB == "" {
-		cfg.UseDB = viper.GetString("db")
-	}
-
 	return &cfg
 }
 
@@ -78,7 +55,6 @@ func NewConfRedis() *RedisConfig {
 	if err := env.Parse(&db); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-
 	return &db
 }
 
@@ -114,7 +90,6 @@ func NewConfPG(param ...bool /* optional args */) *PGConfig {
 	if err := env.Parse(&pgCfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-
 	return &PGConfig{
 		DBUrl: pgCfg.makeURL(),
 	}
