@@ -11,8 +11,8 @@ import (
 )
 
 var cfg = &configs.ServerCfg{
-	ServerAddress: "127.0.0.1:8080",
-	BaseURL:       "http://127.0.0.1:8080",
+	ServerAddress: "127.0.0.1:5001",
+	BaseURL:       "http://127.0.0.1:5001",
 }
 
 type Fields struct {
@@ -64,7 +64,7 @@ func (f Fields) TestHandler_takeAndSendURL(t *testing.T) {
 func (f Fields) TestHandler_redirectToOriginalURL(t *testing.T) {
 	type want struct {
 		code     int
-		location string // f.
+		location string
 	}
 	tests := []struct {
 		name string
