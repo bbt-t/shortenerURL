@@ -106,6 +106,9 @@ func (f *fileDB) SaveURL(k, v string) error {
 }
 
 func (f *fileDB) Ping() error {
+	/*
+		return error if file or filename does not exist
+	*/
 	if f.PathToFile == "" {
 		log.Println("--- missing filename ---")
 		return errDBFileDoesNotExist

@@ -1,14 +1,19 @@
 package app
 
 import (
-	"github.com/bbt-t/shortenerURL/configs"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/bbt-t/shortenerURL/configs"
 	"github.com/bbt-t/shortenerURL/internal/app/storage"
 )
+
+var cfg = &configs.ServerCfg{
+	ServerAddress: "127.0.0.1:8080",
+	BaseURL:       "http://127.0.0.1:8080",
+}
 
 type Fields struct {
 	urls map[string]string
@@ -34,7 +39,6 @@ func (f Fields) TestHandler_takeAndSendURL(t *testing.T) {
 	for _, tt := range tests {
 		for t.Run(tt.name, func(t *testing.T) {}) {
 			request := httptest.NewRequest(http.MethodPost, "/", nil)
-			cfg := configs.NewConfServ()
 
 			w := httptest.NewRecorder()
 			db := storage.NewMapDBPlug()
@@ -79,7 +83,6 @@ func (f Fields) TestHandler_redirectToOriginalURL(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/"+tt.want.location, nil)
 			w := httptest.NewRecorder()
 			db := storage.NewMapDBPlug()
-			cfg := configs.NewConfServ()
 			th := NewHandlerServer(db, *cfg)
 			appH := http.HandlerFunc(th.redirectToOriginalURL)
 			appH.ServeHTTP(w, request)

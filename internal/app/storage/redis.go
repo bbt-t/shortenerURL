@@ -36,6 +36,7 @@ func (r *redisClient) SaveURL(k, v string) error {
 	*/
 	ctx := context.Background()
 	err := r.client.Set(ctx, k, v, 20*time.Second).Err()
+
 	if err != nil {
 		log.Printf("ERROR : %s", err)
 	}
@@ -44,12 +45,13 @@ func (r *redisClient) SaveURL(k, v string) error {
 
 func (r *redisClient) GetURL(k string) (string, error) {
 	/*
-		get value by key.
+		Get value by key.
 		param k: search key
 		return: found value and error (or nil)
 	*/
 	ctx := context.Background()
 	val, err := r.client.Get(ctx, k).Result()
+
 	if errors.Is(err, redis.Nil) {
 		return "", err
 	}
@@ -58,7 +60,6 @@ func (r *redisClient) GetURL(k string) (string, error) {
 
 func (r *redisClient) Ping() error {
 	ctx := context.Background()
-
 	status := r.client.Ping(ctx)
 	err := status.Err()
 

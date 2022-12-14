@@ -4,11 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -27,12 +25,6 @@ func NewConfServ() *ServerCfg {
 		then default values are substituted.
 	*/
 	var cfg ServerCfg
-
-	// TODO: REMOVE PART ->                          //
-	//if err := godotenv.Load(".env"); err != nil {  //
-	//	log.Fatal(err)								 //
-	//}												 //
-	///////////////////////////////////////////////////
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
@@ -114,16 +106,34 @@ type PGConfig struct {
 }
 
 func NewConfPG(param ...bool /* optional args */) *PGConfig {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal(err)
+	/*
+		return: url-param for connect to PG DB.
+	*/
+	var pgCfg pgMakeConfig
+
+	if err := env.Parse(&pgCfg); err != nil {
+		fmt.Printf("%+v\n", err)
 	}
+
 	return &PGConfig{
-		DBUrl: fmt.Sprintf(
-			"host=%s dbname=%s user=%s password=%s sslmode=disable",
-			os.Getenv("DB_HOST"),
-			os.Getenv("DB_NAME"),
-			os.Getenv("DB_USER"),
-			os.Getenv("DB_PASSWORD"),
-		),
+		DBUrl: pgCfg.makeURL(),
 	}
+}
+
+type pgMakeConfig struct {
+	host     string `env:"DB_HOST"`
+	dbname   string `env:"DB_NAME"`
+	user     string `env:"DB_USER"`
+	password string `env:"DB_PASSWORD"`
+	sslMode  string `env:"SSL_MODE"`
+}
+
+func (p *pgMakeConfig) makeURL() string {
+	return fmt.Sprintf(
+		"host=%s dbname=%s user=%s password=%s sslmode=disable",
+		p.host,
+		p.dbname,
+		p.user,
+		p.password,
+	)
 }

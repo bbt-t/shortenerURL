@@ -72,8 +72,10 @@ func (h *ServerHandler) takeAndSendURLJson(w http.ResponseWriter, r *http.Reques
 		Comes -> json object {"url": "original_url"}
 		Coming out <- response {"result": "shorten_url"}
 	*/
-	var req ReqURL
-	var resp RespURL
+	var (
+		req  reqURL
+		resp respURL
+	)
 
 	defer r.Body.Close()
 	payload, errBody := io.ReadAll(r.Body)

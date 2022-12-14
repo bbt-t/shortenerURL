@@ -1,9 +1,9 @@
 package app
 
-type ReqURL struct {
+type reqURL struct {
 	URL string `json:"url"`
 }
 
-type RespURL struct {
+type respURL struct {
 	URL string `json:"result"`
 }
