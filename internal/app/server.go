@@ -106,12 +106,13 @@ func Start(cfg *configs.ServerCfg) {
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
 	sig := make(chan os.Signal, 1)
 
-	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sig
-		shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(serverCtx, 30*time.Second)
 		go func() {
 			<-shutdownCtx.Done()
+			cancel() // it's not necessary!
 			if shutdownCtx.Err() == context.DeadlineExceeded {
 				log.Fatal(":: Graceful shutdown timed out ... forcing exit! ::")
 			}
