@@ -7,3 +7,8 @@ type reqURL struct {
 type respURL struct {
 	URL string `json:"result"`
 }
+
+type singIn struct {
+	UserName string `json:"user" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
