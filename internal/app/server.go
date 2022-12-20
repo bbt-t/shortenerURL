@@ -28,7 +28,17 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/
-	allowedCharsets := []string{"UTF-8", "Latin-1", ""}
+	allowedCharsets := []string{
+		"UTF-8",
+		"Latin-1",
+		"",
+	}
+	allowContentTypes := []string{
+		"application/json",
+		"text/plain",
+		"application/x-www-form-urlencoded",
+		"multipart/form-data",
+	}
 
 	router := chi.NewRouter()
 	h := ServerHandler{
@@ -48,19 +58,25 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 	h.Chi.Use(httprate.LimitByIP(100, 1*time.Minute))
 	// Allowed content:
 	h.Chi.Use(middleware.ContentCharset(allowedCharsets... /* list unpacking */))
-	h.Chi.Use(middleware.AllowContentType("application/json", "text/plain"))
+	h.Chi.Use(middleware.AllowContentType(allowContentTypes... /* list unpacking */))
 	// Compress:
 	h.Chi.Use(middleware.AllowContentEncoding("gzip"))
 	h.Chi.Use(middleware.Compress(5, "application/json", "text/plain"))
 
 	// Protected routes:
 	h.Chi.Group(func(r chi.Router) {
-		// Add jwt-middlewares:
+		r.Use(jwtauth.Verifier(_tokenAuth))
+
+		r.Post("/login", h.singJWTCookie)
+	})
+
+	h.Chi.Group(func(r chi.Router) {
 		r.Use(jwtauth.Verifier(_tokenAuth))
 		r.Use(jwtauth.Authenticator)
-		// Patterns:
-		r.Get("/admin", h.singJWT)
+
+		r.Get("/admin", h.adminAuth)
 	})
+
 	// Public routes:
 	h.Chi.Group(func(r chi.Router) {
 		r.Get("/{id}", h.redirectToOriginalURL)
@@ -100,7 +116,6 @@ func Start(cfg *configs.ServerCfg) {
 		Addr:    cfg.ServerAddress,
 		Handler: h.Chi,
 	}
-
 	// Graceful shutdown:
 	// Taken from Chi package documentation -> https://github.com/go-chi/chi/tree/master/_examples/graceful
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
@@ -112,7 +127,6 @@ func Start(cfg *configs.ServerCfg) {
 		shutdownCtx, cancel := context.WithTimeout(serverCtx, 30*time.Second)
 		go func() {
 			<-shutdownCtx.Done()
-			cancel() // it's not necessary!
 			if shutdownCtx.Err() == context.DeadlineExceeded {
 				log.Fatal(":: Graceful shutdown timed out ... forcing exit! ::")
 			}
@@ -121,6 +135,7 @@ func Start(cfg *configs.ServerCfg) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		cancel() // <- it's not necessary!
 		serverStopCtx()
 	}()
 	log.Println("---> RUN SERVER <---")

@@ -1,9 +1,12 @@
 package pkg
 
 import (
+	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"hash/fnv"
 	"log"
 	"net/url"
+	"strings"
 )
 
 func HashShortening(s []byte) uint32 {
@@ -27,5 +30,29 @@ func URLValidation(inpURL string) bool {
 	if err != nil {
 		log.Println(err)
 	}
-	return nil == err
+	return errors.Is(err, nil)
+}
+
+func HostOnly(address string) string {
+	/*
+		Separating server IP.
+		param address: "ip:port"
+	*/
+	if !strings.Contains(address, ":") {
+		return address
+	}
+	return strings.Split(address, ":")[0]
+}
+
+func EncryptPassword(password string) (string, error) {
+	/*
+		Encrypt the password.
+	*/
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func AssertEqualPassword(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return errors.Is(err, nil)
 }

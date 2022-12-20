@@ -9,8 +9,9 @@ type mapDBPlug struct {
 	/*
 		Simple DB stub.
 	*/
-	mapURL map[string]string
-	mutex  sync.Mutex
+	mapURL  map[string]string
+	mapUser map[string]interface{}
+	mutex   sync.Mutex
 }
 
 func NewMapDBPlug() DBRepo {
@@ -51,6 +52,20 @@ func (m *mapDBPlug) SaveURL(k, v string) error {
 
 	m.mutex.Lock()
 	m.mapURL[k] = v
+	m.mutex.Unlock()
+	return nil
+}
+
+func (m *mapDBPlug) SaveUser(k string, v interface{}) error {
+	m.mutex.Lock()
+	_, ok := m.mapUser[k]
+	m.mutex.Unlock()
+	if ok {
+		return nil
+	}
+
+	m.mutex.Lock()
+	m.mapUser[k] = v
 	m.mutex.Unlock()
 	return nil
 }

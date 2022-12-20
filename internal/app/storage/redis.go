@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"fmt"
 	"log"
@@ -32,7 +34,7 @@ func NewRedisConnect() DBRepo {
 
 func (r *redisClient) SaveURL(k, v string) error {
 	/*
-		Write key - value to Redis.
+		Write key - value (strings) to Redis.
 	*/
 	ctx := context.Background()
 	err := r.client.Set(ctx, k, v, 20*time.Second).Err()
@@ -41,6 +43,28 @@ func (r *redisClient) SaveURL(k, v string) error {
 		log.Printf("ERROR : %s", err)
 	}
 	return err
+}
+
+func (r *redisClient) SaveUser(k string, value interface{}) error {
+	/*
+		Save user info in gob-representation.
+		param k: key in string
+		param value: struct obj
+	*/
+	var buf bytes.Buffer
+	ctx := context.Background()
+	encoder := gob.NewEncoder(&buf)
+	id := "user-db"
+
+	if err := encoder.Encode(value); err != nil {
+		log.Println(err)
+		return err
+	}
+	if err := r.client.HSet(ctx, id, k, buf.Bytes()).Err(); err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
 }
 
 func (r *redisClient) GetURL(k string) (string, error) {
@@ -53,18 +77,38 @@ func (r *redisClient) GetURL(k string) (string, error) {
 	val, err := r.client.Get(ctx, k).Result()
 
 	if errors.Is(err, redis.Nil) {
+		log.Printf("key %v Not found", k)
 		return "", err
 	}
 	return val, nil
 }
 
+func (r *redisClient) GetUser(k string, value interface{}) error {
+	/*
+		Get value by key.
+	*/
+	ctx := context.Background()
+	id := "user-db"
+
+	buf, err := r.client.HGet(ctx, id, k).Bytes()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	errDec := gob.NewDecoder(bytes.NewReader(buf)).Decode(value)
+	if errDec != nil {
+		log.Println(err)
+		return errDec
+	}
+	return nil
+}
+
 func (r *redisClient) Ping() error {
 	ctx := context.Background()
 	status := r.client.Ping(ctx)
-	err := status.Err()
-
-	if err != nil {
+	if err := status.Err(); err != nil {
 		log.Println(err)
+		return err
 	}
-	return err
+	return nil
 }
