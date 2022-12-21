@@ -14,7 +14,7 @@ type ServerCfg struct {
 	BaseURL       string `env:"BASE_URL"`          //envDefault:"http://127.0.0.1:8080"
 	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"
 	UseDB         string
-	UrlDB         string
+	DBConnectURL  string
 }
 
 func NewConfServ() *ServerCfg {
@@ -29,7 +29,7 @@ func NewConfServ() *ServerCfg {
 	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
 	flag.StringVar(&cfg.FilePath, "f", "", "file path")
 	flag.StringVar(&cfg.UseDB, "u", "", "used db (sqlite/pg/redis")
-	flag.StringVar(&cfg.UrlDB, "d", "", "db url (only for pg")
+	flag.StringVar(&cfg.DBConnectURL, "d", "", "db url (only for pg")
 	flag.Parse()
 
 	if err := env.Parse(&cfg); err != nil {
