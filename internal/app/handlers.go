@@ -119,3 +119,22 @@ func (h *ServerHandler) takeAndSendURLJson(w http.ResponseWriter, r *http.Reques
 		log.Printf("ERROR : %s", err)
 	}
 }
+
+func (h *ServerHandler) takeAllUrls(w http.ResponseWriter, r *http.Request) {
+	var result []map[string]string
+	//result, err := h.store.GetAllURL()
+	//if err != nil {
+	//		http.Error(
+	//			w,
+	//			fmt.Sprintf("%v", err),
+	//			http.StatusNoContent
+	//		)
+	//		return
+	//	}
+	jResult, _ := json.Marshal(result)
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	if _, err := w.Write(jResult); err != nil {
+		log.Printf("ERROR : %s", err)
+	}
+}

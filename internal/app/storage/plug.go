@@ -29,14 +29,34 @@ func (m *mapDBPlug) GetURL(k string) (string, error) {
 		get info from the map by key.
 	*/
 	defer m.mutex.Unlock()
-
 	m.mutex.Lock()
-	result, ok := m.mapURL[k]
 
+	result, ok := m.mapURL[k]
 	if !ok {
 		return "", errDBUnknownID
 	}
+
 	return result, nil
+}
+
+func (m *mapDBPlug) GetAllURL() ([]map[string]string, error) {
+	/*
+		Take all saved urls.
+	*/
+	defer m.mutex.Unlock()
+	m.mutex.Lock()
+
+	var allUrl []map[string]string
+	if len(m.mapURL) == 0 {
+		return nil, errDBEmpty
+	}
+	for k, v := range m.mapURL {
+		temp := make(map[string]string)
+		temp[k] = v
+		allUrl = append(allUrl, temp)
+	}
+
+	return allUrl, nil
 }
 
 func (m *mapDBPlug) SaveURL(k, v string) error {

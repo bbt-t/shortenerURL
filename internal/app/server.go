@@ -80,6 +80,7 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 	// Public routes:
 	h.Chi.Group(func(r chi.Router) {
 		r.Get("/{id}", h.redirectToOriginalURL)
+		r.Get("/api/user/urls", h.takeAllUrls)
 		r.Post("/api/shorten", h.takeAndSendURLJson)
 		r.Post("/", h.takeAndSendURL)
 	})
