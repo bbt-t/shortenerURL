@@ -46,17 +46,17 @@ func (m *mapDBPlug) GetAllURL() ([]map[string]string, error) {
 	defer m.mutex.Unlock()
 	m.mutex.Lock()
 
-	var allUrl []map[string]string
+	var allURL []map[string]string
 	if len(m.mapURL) == 0 {
 		return nil, errDBEmpty
 	}
 	for k, v := range m.mapURL {
 		temp := make(map[string]string)
 		temp[k] = v
-		allUrl = append(allUrl, temp)
+		allURL = append(allURL, temp)
 	}
 
-	return allUrl, nil
+	return allURL, nil
 }
 
 func (m *mapDBPlug) SaveURL(k, v string) error {
