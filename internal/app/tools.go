@@ -12,7 +12,7 @@ func init() {
 
 func makeToken(name string) (string, error) {
 	/*
-		Create a token.
+		Create a JWT token.
 	*/
 	_, tokenString, err := _tokenAuth.Encode(map[string]interface{}{"username": name})
 	if err != nil {

@@ -121,6 +121,9 @@ func (h *ServerHandler) takeAndSendURLJson(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *ServerHandler) takeAllUrls(w http.ResponseWriter, r *http.Request) {
+	/*
+		Get all saved data.
+	*/
 	var result []map[string]string
 	//result, err := h.store.GetAllURL()
 	//if err != nil {
@@ -133,13 +136,16 @@ func (h *ServerHandler) takeAllUrls(w http.ResponseWriter, r *http.Request) {
 	//	}
 	jResult, _ := json.Marshal(result)
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jResult); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 }
 
 func (h *ServerHandler) pingDB(w http.ResponseWriter, r *http.Request) {
+	/*
+		Database connection check.
+	*/
 	if err := h.store.Ping(); err != nil {
 		http.Error(
 			w,

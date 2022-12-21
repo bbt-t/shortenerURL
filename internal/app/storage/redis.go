@@ -71,7 +71,6 @@ func (r *redisClient) GetURL(k string) (string, error) {
 	/*
 		Get value by key.
 		param k: search key
-		return: found value and error (or nil)
 	*/
 	ctx := context.Background()
 	val, err := r.client.Get(ctx, k).Result()

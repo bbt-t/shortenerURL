@@ -10,7 +10,7 @@ import (
 )
 
 type ServerCfg struct {
-	ServerAddress string `env:"SERVER_ADDRESS"`    // envDefault:"127.0.0.1:8080"
+	ServerAddress string `env:"SERVER_ADDRESS"`    //envDefault:"127.0.0.1:8080"
 	BaseURL       string `env:"BASE_URL"`          //envDefault:"http://127.0.0.1:8080"
 	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"
 	UseDB         string
@@ -19,9 +19,7 @@ type ServerCfg struct {
 
 func NewConfServ() *ServerCfg {
 	/*
-		Initialize a new conf. Values are taken from .env file.
-		If .env file does not exist or the required value does not exist,
-		then default values are substituted.
+		Initialize a new conf. Env-variables take precedence.
 	*/
 	var cfg ServerCfg
 
@@ -46,7 +44,7 @@ type RedisConfig struct {
 
 func NewConfRedis() *RedisConfig {
 	/*
-		Initialize a new Redis conf. Values are taken from .env file.
+		Initialize a new Redis conf. Password taken from .env file, other - from the .toml file.
 		If .env file does not exist or the required value does not exist,
 		then default values are substituted.
 	*/
@@ -67,9 +65,7 @@ type SQLiteConfig struct {
 
 func NewConfSQLite() *SQLiteConfig {
 	/*
-		Initialize a new SQLite DB conf. Values are taken from .env file.
-		If .env file does not exist or the required value does not exist,
-		then default values are substituted.
+		Initialize a new SQLite DB conf. Value from the .toml file.
 	*/
 	var db SQLiteConfig
 	_, err := toml.DecodeFile("./configs/server_conf.toml", &db)
@@ -84,8 +80,9 @@ type PGConfig struct {
 	DBUrl string `env:"DATABASE_DSN"`
 }
 
-func NewConfPG(param string) *PGConfig {
+func NewConfPG(param string /* flag on startup */) *PGConfig {
 	/*
+		Initialize a new SQLite DB conf. Value from env or flag on startup.
 		return: url-param for connect to PG DB.
 	*/
 	var pgCfg PGConfig

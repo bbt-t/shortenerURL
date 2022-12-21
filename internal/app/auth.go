@@ -14,6 +14,9 @@ import (
 )
 
 func (h *ServerHandler) singJWTCookie(w http.ResponseWriter, r *http.Request) {
+	/*
+		Issuing cookie.
+	*/
 	var userName, userPassword string
 
 	switch r.Header.Get("Content-Type") {
@@ -71,13 +74,11 @@ func (h *ServerHandler) singJWTCookie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ServerHandler) adminAuth(w http.ResponseWriter, r *http.Request) {
+	/*
+		JWT auth.
+	*/
 	_, claims, _ := jwtauth.FromContext(r.Context())
 	if _, err := w.Write([]byte(fmt.Sprintf("Hi %v", claims["username"]))); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 }
-
-// TODO:
-// 		1. сделать общий интерфейс для json структур с методами маршал, анмаршал.
-//  	2. сделать регистрацию в бд
-//		3. проверку логин/пасс в бд через encrypt

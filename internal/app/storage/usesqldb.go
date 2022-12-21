@@ -17,7 +17,7 @@ type sqlDatabase struct {
 
 func NewSQLDatabase(nameDB, dbURL string) DBRepo {
 	/*
-		Selects sql-db and initializing. Create tables.
+		Selects DB (sqlite or postgres) and initializing. Create tables.
 		param nameDB: received parameter (flag) to select db
 		return: db-object or nil
 	*/
@@ -34,7 +34,7 @@ func NewSQLDatabase(nameDB, dbURL string) DBRepo {
 
 	db, err := sqlx.Connect(nameDB, param)
 	if err != nil {
-		log.Print(errDBNotSelected /* custom error */)
+		log.Println(errDBNotSelected)
 		return nil
 	}
 
@@ -45,7 +45,6 @@ func NewSQLDatabase(nameDB, dbURL string) DBRepo {
 func (d *sqlDatabase) SaveURL(k, v string) error {
 	/*
 		Adding info to the DB.
-		return: Error or nil
 	*/
 	err := saveInDB(d.db, k /* id (hashed url) */, v /* original url */)
 	return err
@@ -55,7 +54,6 @@ func (d *sqlDatabase) GetURL(k string) (string, error) {
 	/*
 		Search for info by ID.
 		param k: id by which we search in the DB
-		return: result (or "") and error (or nil)
 	*/
 	result, err := getInfo(d.db, k /* id (hashed url) */)
 	if err != nil {
@@ -65,6 +63,9 @@ func (d *sqlDatabase) GetURL(k string) (string, error) {
 }
 
 func (d *sqlDatabase) Ping() error {
+	/*
+		Checking connection with ctx.Background.
+	*/
 	err := d.db.Ping()
 	if err != nil {
 		log.Println(err)
