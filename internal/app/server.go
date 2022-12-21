@@ -102,7 +102,7 @@ func Start(cfg *configs.ServerCfg) {
 		db = st.NewFileDB(cfg.FilePath)
 	} else {
 		if cfg.UseDB != "redis" {
-			db = st.NewSQLDatabase(cfg.UseDB, cfg.DbURL)
+			db = st.NewSQLDatabase(cfg.UseDB, cfg.UrlDB)
 		} else {
 			db = st.NewRedisConnect()
 		}
