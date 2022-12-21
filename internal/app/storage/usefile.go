@@ -97,6 +97,31 @@ func (f *fileDB) GetURL(k string) (string, error) {
 	return originalURL, nil
 }
 
+func (f *fileDB) GetAllURL() ([]map[string]string, error) {
+	/*
+		Take all saved urls.
+	*/
+	if err := f.Ping(); err != nil {
+		log.Fatal(err)
+	}
+	defer f.mutex.Unlock()
+	f.mutex.Lock()
+
+	var allURL []map[string]string
+
+	allMap, _ := f.get()
+	if len(allMap) == 0 {
+		return nil, errDBEmpty
+	}
+	for k, v := range allMap {
+		temp := make(map[string]string)
+		temp[k] = v
+		allURL = append(allURL, temp)
+	}
+
+	return allURL, nil
+}
+
 func (f *fileDB) SaveURL(k, v string) error {
 	/*
 		Calling a func to save info to a file.

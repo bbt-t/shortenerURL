@@ -22,6 +22,14 @@ func getInfo(db *sqlx.DB, k string) (string, error) {
 	return result, nil
 }
 
+//func getAllInfo(db *sqlx.DB) ([]map[string]string, error) {
+//	var people []map[string]string
+//	if err := db.Select(&people, "SELECT * FROM items"); err != nil {
+//		return nil, err
+//	}
+//	return people, nil
+//}
+
 func saveInDB(db *sqlx.DB, k, v string) error {
 	info := map[string]interface{}{
 		"id":        k,

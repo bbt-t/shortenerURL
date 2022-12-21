@@ -79,6 +79,7 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 
 	// Public routes:
 	h.Chi.Group(func(r chi.Router) {
+		r.Get("/ping", h.pingDB)
 		r.Get("/{id}", h.redirectToOriginalURL)
 		r.Get("/api/user/urls", h.takeAllUrls)
 		r.Post("/api/shorten", h.takeAndSendURLJson)
@@ -101,7 +102,7 @@ func Start(cfg *configs.ServerCfg) {
 		db = st.NewFileDB(cfg.FilePath)
 	} else {
 		if cfg.UseDB != "redis" {
-			db = st.NewSQLDatabase(cfg.UseDB)
+			db = st.NewSQLDatabase(cfg.UseDB, cfg.DbURL)
 		} else {
 			db = st.NewRedisConnect()
 		}

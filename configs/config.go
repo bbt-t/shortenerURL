@@ -14,6 +14,7 @@ type ServerCfg struct {
 	BaseURL       string `env:"BASE_URL"`          //envDefault:"http://127.0.0.1:8080"
 	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"
 	UseDB         string
+	DbURL         string
 }
 
 func NewConfServ() *ServerCfg {
@@ -27,6 +28,8 @@ func NewConfServ() *ServerCfg {
 	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
 	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
 	flag.StringVar(&cfg.FilePath, "f", "", "file path")
+	flag.StringVar(&cfg.UseDB, "u", "", "used db (sqlite/pg/redis")
+	flag.StringVar(&cfg.DbURL, "d", "", "db url (only for pg")
 	flag.Parse()
 
 	if err := env.Parse(&cfg); err != nil {
@@ -78,37 +81,20 @@ func NewConfSQLite() *SQLiteConfig {
 }
 
 type PGConfig struct {
-	DBUrl string
+	DBUrl string `env:"DATABASE_DSN"`
 }
 
-func NewConfPG(param ...bool /* optional args */) *PGConfig {
+func NewConfPG(param string) *PGConfig {
 	/*
 		return: url-param for connect to PG DB.
 	*/
-	var pgCfg pgMakeConfig
+	var pgCfg PGConfig
 
 	if err := env.Parse(&pgCfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-	return &PGConfig{
-		DBUrl: pgCfg.makeURL(),
+	if pgCfg.DBUrl == "" {
+		pgCfg.DBUrl = param
 	}
-}
-
-type pgMakeConfig struct {
-	host     string `env:"DB_HOST"`
-	dbname   string `env:"DB_NAME"`
-	user     string `env:"DB_USER"`
-	password string `env:"DB_PASSWORD"`
-	sslMode  string `env:"SSL_MODE"`
-}
-
-func (p *pgMakeConfig) makeURL() string {
-	return fmt.Sprintf(
-		"host=%s dbname=%s user=%s password=%s sslmode=disable",
-		p.host,
-		p.dbname,
-		p.user,
-		p.password,
-	)
+	return &pgCfg
 }

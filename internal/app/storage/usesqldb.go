@@ -15,7 +15,7 @@ type sqlDatabase struct {
 	db *sqlx.DB
 }
 
-func NewSQLDatabase(nameDB string) DBRepo {
+func NewSQLDatabase(nameDB, dbURL string) DBRepo {
 	/*
 		Selects sql-db and initializing. Create tables.
 		param nameDB: received parameter (flag) to select db
@@ -27,9 +27,9 @@ func NewSQLDatabase(nameDB string) DBRepo {
 	case "sqlite":
 		nameDB = fmt.Sprintf("%s3", nameDB)
 		param = configs.NewConfSQLite().DBName
-	case "postgres":
+	case "pg":
 		nameDB = "postgres"
-		param = configs.NewConfPG().DBUrl
+		param = configs.NewConfPG(dbURL).DBUrl
 	}
 
 	db, err := sqlx.Connect(nameDB, param)

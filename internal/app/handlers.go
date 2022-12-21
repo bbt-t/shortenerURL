@@ -138,3 +138,14 @@ func (h *ServerHandler) takeAllUrls(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR : %s", err)
 	}
 }
+
+func (h *ServerHandler) pingDB(w http.ResponseWriter, r *http.Request) {
+	if err := h.store.Ping(); err != nil {
+		http.Error(
+			w,
+			fmt.Sprintf("%v", err),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+}
