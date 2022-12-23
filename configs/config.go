@@ -10,16 +10,17 @@ import (
 )
 
 type ServerCfg struct {
-	ServerAddress string `env:"SERVER_ADDRESS"`    //envDefault:"127.0.0.1:8080"
-	BaseURL       string `env:"BASE_URL"`          //envDefault:"http://127.0.0.1:8080"
-	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"
+	ServerAddress string `env:"SERVER_ADDRESS"    envDefault:"127.0.0.1:8080"`
+	BaseURL       string `env:"BASE_URL"          envDefault:"http://127.0.0.1:8080"`
+	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"`
 	UseDB         string
 	DBConnectURL  string
 }
 
 func NewConfServ() *ServerCfg {
 	/*
-		Initialize a new conf. Env-variables take precedence.
+		Initialize a new conf.
+		flag -> env, Env-variables take precedence.
 	*/
 	var cfg ServerCfg
 
