@@ -42,8 +42,8 @@ func (f *fileDB) save(k, v string) error {
 
 	saveTo, errOpen := os.OpenFile(f.PathToFile,
 		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
-		0777,
-	) //0700
+		0700,
+	)
 
 	if errOpen != nil {
 		fmt.Println("Cannot create ->", f.PathToFile)
@@ -69,14 +69,13 @@ func (f *fileDB) get() (map[string]string, error) {
 
 	loadFrom, err := os.OpenFile(f.PathToFile,
 		os.O_RDONLY,
-		0777,
-	) //0700
+		0700,
+	)
 
 	if err != nil {
 		if os.IsPermission(err) {
 			log.Println("Error: Read permission denied.")
 		}
-		log.Printf("Empty key/value store! ERROR : %v", err)
 		return nil, err
 	}
 	decoder := gob.NewDecoder(loadFrom)

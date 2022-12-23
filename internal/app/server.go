@@ -28,40 +28,42 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/
-	allowedCharsets := []string{
-		"UTF-8",
-		"Latin-1",
-		"",
-	}
-	allowContentTypes := []string{
-		"application/json",
-		"text/plain",
-		"application/x-www-form-urlencoded",
-		"multipart/form-data",
-	}
+	allowedCharsets, allowContentTypes :=
+		[]string{
+			"UTF-8",
+			"Latin-1",
+			"",
+		},
+		[]string{
+			"application/json",
+			"text/plain",
+			"application/x-www-form-urlencoded",
+			"multipart/form-data",
+		}
 
-	router := chi.NewRouter()
 	h := ServerHandler{
-		Chi:   router,
+		Chi:   chi.NewRouter(),
 		store: s,
 		cfg:   cfg,
 	}
 
-	// h.Chi.Use(middleware.RealIP) // Only if a reverse proxy is used (e.g. nginx)
-	h.Chi.Use(middleware.Logger)
-	h.Chi.Use(middleware.Recoverer)
-	// Working with paths:
-	h.Chi.Use(middleware.CleanPath)
-	h.Chi.Use(middleware.RedirectSlashes)
-	// Throttle:
-	h.Chi.Use(middleware.ThrottleBacklog(10, 50, time.Second*10))
-	h.Chi.Use(httprate.LimitByIP(100, 1*time.Minute))
-	// Allowed content:
-	h.Chi.Use(middleware.ContentCharset(allowedCharsets... /* list unpacking */))
-	h.Chi.Use(middleware.AllowContentType(allowContentTypes... /* list unpacking */))
-	// Compress:
-	h.Chi.Use(middleware.AllowContentEncoding("gzip"))
-	h.Chi.Use(middleware.Compress(5, "application/json", "text/plain"))
+	h.Chi.Use(
+		//middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
+		middleware.Logger,
+		middleware.Recoverer,
+		// Working with paths:
+		middleware.CleanPath,
+		middleware.RedirectSlashes,
+		// Throttle:
+		middleware.ThrottleBacklog(10, 50, time.Second*10),
+		httprate.LimitByIP(100, 1*time.Minute),
+		// Allowed content:
+		middleware.ContentCharset(allowedCharsets... /* list unpacking */),
+		middleware.AllowContentType(allowContentTypes... /* list unpacking */),
+		// Compress:
+		middleware.AllowContentEncoding("gzip"),
+		middleware.Compress(5, "application/json", "text/plain"),
+	)
 
 	// Protected routes:
 	h.Chi.Group(func(r chi.Router) {
@@ -80,10 +82,12 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 	// Public routes:
 	h.Chi.Group(func(r chi.Router) {
 		r.Get("/ping", h.pingDB)
-		r.Get("/{id}", h.redirectToOriginalURL)
+		r.Get("/{id}", h.recoverOriginalURL)
 		r.Get("/api/user/urls", h.takeAllUrls)
-		r.Post("/api/shorten", h.takeAndSendURLJson)
-		r.Post("/", h.takeAndSendURL)
+
+		//r.Post("/api/shorten/batch", ...) // <- for inc12
+		r.Post("/api/shorten", h.composeNewShortURLJson)
+		r.Post("/", h.composeNewShortURL)
 	})
 
 	return &h
@@ -98,7 +102,7 @@ func Start(cfg *configs.ServerCfg) {
 	var db st.DBRepo
 	// Database selection to use:
 	if cfg.FilePath != "" {
-		log.Println("WITH FILE STORAGE --->>>")
+		log.Println("WITH FILE STORAGE -->")
 		db = st.NewFileDB(cfg.FilePath)
 	} else {
 		if cfg.UseDB != "redis" {
@@ -108,7 +112,7 @@ func Start(cfg *configs.ServerCfg) {
 		}
 		if nil == db {
 			db = st.NewMapDBPlug()
-			log.Println("--->>> SWITCH TO MAP")
+			log.Println("--> SWITCH TO MAP")
 		}
 	}
 

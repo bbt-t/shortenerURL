@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (h *ServerHandler) redirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) recoverOriginalURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for redirecting to original URL.
 		get ID from the route  -> search for the original url in DB:
@@ -30,7 +30,7 @@ func (h *ServerHandler) redirectToOriginalURL(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) composeNewShortURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for getting URL to shortened.
 		Received, run through the HASH-func and write (hash, original url)
@@ -67,7 +67,7 @@ func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *ServerHandler) takeAndSendURLJson(w http.ResponseWriter, r *http.Request) {
+func (h *ServerHandler) composeNewShortURLJson(w http.ResponseWriter, r *http.Request) {
 	/*
 		Comes -> json object {"url": "original_url"}
 		Coming out <- response {"result": "shorten_url"}
@@ -105,9 +105,9 @@ func (h *ServerHandler) takeAndSendURLJson(w http.ResponseWriter, r *http.Reques
 	if err := h.store.SaveURL(hashedVal, originalURL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
-	shortURL := fmt.Sprintf("%v/%v", h.cfg.BaseURL, hashedVal)
 
-	resp.URL = shortURL
+	resp.URL = fmt.Sprintf("%v/%v", h.cfg.BaseURL, hashedVal)
+
 	result, err := json.Marshal(resp)
 	if err != nil {
 		log.Println(err)

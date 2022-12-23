@@ -44,7 +44,7 @@ func (f Fields) TestHandler_takeAndSendURL(t *testing.T) {
 			db := storage.NewMapDBPlug()
 			th := NewHandlerServer(db, *cfg)
 
-			appH := http.HandlerFunc(th.takeAndSendURL)
+			appH := http.HandlerFunc(th.composeNewShortURL)
 			appH.ServeHTTP(w, request)
 			res := w.Result()
 			if res.StatusCode != tt.want.code {
@@ -84,7 +84,7 @@ func (f Fields) TestHandler_redirectToOriginalURL(t *testing.T) {
 			w := httptest.NewRecorder()
 			db := storage.NewMapDBPlug()
 			th := NewHandlerServer(db, *cfg)
-			appH := http.HandlerFunc(th.redirectToOriginalURL)
+			appH := http.HandlerFunc(th.recoverOriginalURL)
 			appH.ServeHTTP(w, request)
 			res := w.Result()
 			defer res.Body.Close()
