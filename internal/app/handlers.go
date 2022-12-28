@@ -120,28 +120,6 @@ func (h *ServerHandler) composeNewShortURLJson(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func (h *ServerHandler) takeAllUrls(w http.ResponseWriter, r *http.Request) {
-	/*
-		Get all saved data.
-	*/
-	var result []map[string]string
-	//result, err := h.store.GetAllURL()
-	//if err != nil {
-	//		http.Error(
-	//			w,
-	//			fmt.Sprintf("%v", err),
-	//			http.StatusNoContent
-	//		)
-	//		return
-	//	}
-	jResult, _ := json.Marshal(result)
-
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(jResult); err != nil {
-		log.Printf("ERROR : %s", err)
-	}
-}
-
 func (h *ServerHandler) pingDB(w http.ResponseWriter, r *http.Request) {
 	/*
 		Database connection check.

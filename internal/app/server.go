@@ -15,7 +15,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
-	"github.com/go-chi/jwtauth/v5"
 )
 
 type ServerHandler struct {
@@ -65,26 +64,10 @@ func NewHandlerServer(s st.DBRepo, cfg configs.ServerCfg) *ServerHandler {
 		middleware.Compress(5, "application/json", "text/plain"),
 	)
 
-	// Protected routes:
-	h.Chi.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(_tokenAuth))
-
-		r.Post("/login", h.singJWTCookie)
-	})
-
-	h.Chi.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(_tokenAuth))
-		r.Use(jwtauth.Authenticator)
-
-		r.Get("/admin", h.adminAuth)
-	})
-
 	// Public routes:
 	h.Chi.Group(func(r chi.Router) {
 		r.Get("/ping", h.pingDB)
 		r.Get("/{id}", h.recoverOriginalURL)
-		r.Get("/api/user/urls", h.takeAllUrls)
-
 		//r.Post("/api/shorten/batch", ...) // <- for inc12
 		r.Post("/api/shorten", h.composeNewShortURLJson)
 		r.Post("/", h.composeNewShortURL)
@@ -105,12 +88,12 @@ func Start(cfg *configs.ServerCfg) {
 		log.Println("WITH FILE STORAGE -->")
 		db = st.NewFileDB(cfg.FilePath)
 	} else {
-		if cfg.UseDB != "redis" {
-			db = st.NewSQLDatabase(cfg.UseDB, cfg.DBConnectURL)
-		} else {
+		switch cfg.UseDB {
+		case "redis":
 			db = st.NewRedisConnect()
-		}
-		if nil == db {
+		case "sqlite", "pg":
+			db = st.NewSQLDatabase(cfg.UseDB, cfg.DBConnectURL)
+		default:
 			db = st.NewMapDBPlug()
 			log.Println("--> SWITCH TO MAP")
 		}

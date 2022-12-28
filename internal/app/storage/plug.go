@@ -11,7 +11,7 @@ type mapDBPlug struct {
 	*/
 	mapURL  map[string]string
 	mapUser map[string]interface{}
-	mutex   sync.Mutex
+	mutex   *sync.RWMutex
 }
 
 func NewMapDBPlug() DBRepo {
@@ -20,7 +20,7 @@ func NewMapDBPlug() DBRepo {
 	*/
 	return &mapDBPlug{
 		mapURL: map[string]string{},
-		mutex:  sync.Mutex{},
+		mutex:  new(sync.RWMutex),
 	}
 }
 
@@ -28,8 +28,8 @@ func (m *mapDBPlug) GetURL(k string) (string, error) {
 	/*
 		get info from the map by key.
 	*/
-	defer m.mutex.Unlock()
-	m.mutex.Lock()
+	defer m.mutex.RUnlock()
+	m.mutex.RLock()
 
 	result, ok := m.mapURL[k]
 	if !ok {
@@ -43,8 +43,8 @@ func (m *mapDBPlug) GetAllURL() ([]map[string]string, error) {
 	/*
 		Take all saved urls.
 	*/
-	defer m.mutex.Unlock()
-	m.mutex.Lock()
+	defer m.mutex.RUnlock()
+	m.mutex.RLock()
 
 	var allURL []map[string]string
 	if len(m.mapURL) == 0 {

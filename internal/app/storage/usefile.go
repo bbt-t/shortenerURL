@@ -13,7 +13,7 @@ type fileDB struct {
 		Storage implementation in file.
 	*/
 	PathToFile string
-	mutex      *sync.Mutex
+	mutex      *sync.RWMutex
 }
 
 func NewFileDB(pathFile string) DBRepo {
@@ -23,7 +23,7 @@ func NewFileDB(pathFile string) DBRepo {
 	*/
 	return &fileDB{
 		PathToFile: pathFile,
-		mutex:      &sync.Mutex{},
+		mutex:      new(sync.RWMutex),
 	}
 }
 
@@ -65,7 +65,7 @@ func (f *fileDB) get() (map[string]string, error) {
 	/*
 		Open file and take map-object from there.
 	*/
-	var DATA map[string]string
+	var data map[string]string
 
 	loadFrom, err := os.OpenFile(f.PathToFile,
 		os.O_RDONLY,
@@ -79,10 +79,10 @@ func (f *fileDB) get() (map[string]string, error) {
 		return nil, err
 	}
 	decoder := gob.NewDecoder(loadFrom)
-	if err := decoder.Decode(&DATA); err != nil {
-		return DATA, err
+	if err := decoder.Decode(&data); err != nil {
+		return data, err
 	}
-	return DATA, nil
+	return data, nil
 }
 
 func (f *fileDB) GetURL(k string) (string, error) {
@@ -92,9 +92,9 @@ func (f *fileDB) GetURL(k string) (string, error) {
 	if err := f.Ping(); err != nil {
 		log.Fatal(err)
 	}
-	defer f.mutex.Unlock()
+	defer f.mutex.RUnlock()
 	fileMap, _ := f.get()
-	f.mutex.Lock()
+	f.mutex.RLock()
 	originalURL, ok := fileMap[k]
 	if !ok {
 		return "", errDBUnknownID
@@ -109,8 +109,8 @@ func (f *fileDB) GetAllURL() ([]map[string]string, error) {
 	if err := f.Ping(); err != nil {
 		log.Fatal(err)
 	}
-	defer f.mutex.Unlock()
-	f.mutex.Lock()
+	defer f.mutex.RUnlock()
+	f.mutex.RLock()
 
 	var allURL []map[string]string
 
