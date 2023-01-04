@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/gofrs/uuid"
 	"io"
 	"log"
@@ -37,8 +36,8 @@ func (s ShortenerHandler) composeNewShortURL(w http.ResponseWriter, r *http.Requ
 
 	hashedVal := fmt.Sprintf("%d", pkg.HashShortening([]byte(originalURL)))
 
-	_, claims, _ := jwtauth.FromContext(r.Context())
-	userID, _ := uuid.FromString(fmt.Sprintf("%v", claims["user_id"]))
+	temp := r.Context().Value("user_id")
+	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
 
 	if err := s.s.SaveShortURL(userID, hashedVal, originalURL); err != nil {
 		log.Printf("ERROR : %s", err)
