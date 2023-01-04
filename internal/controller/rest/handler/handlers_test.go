@@ -44,7 +44,7 @@ package handler
 //
 //			w := httptest.NewRecorder()
 //			db := storage.NewMapDBPlug()
-//			th := rest.NewHttpServer(db, *cfg)
+//			th := rest.NewHTTPServer(db, *cfg)
 //
 //			appH := http.HandlerFunc(th.composeNewShortURL)
 //			appH.ServeHTTP(w, request)

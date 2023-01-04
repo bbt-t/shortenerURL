@@ -41,7 +41,7 @@ func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, k, v string) error {
 	/*
 		Adding info to the DB.
 	*/
-	err := saveURl(d.db, userID, k /* hashed url */, v /* original url */)
+	err := saveURL(d.db, userID, k /* hashed url */, v /* original url */)
 	return err
 }
 
@@ -50,7 +50,7 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 		Search for info by ID.
 		param k: id by which we search in the DB
 	*/
-	result, err := getHashUrl(d.db, k /* id (hashed url) */)
+	result, err := getHashURL(d.db, k /* id (hashed url) */)
 	if err != nil {
 		return "", err
 	}
@@ -86,11 +86,11 @@ func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) (map[string]string, er
 	//inMap := structs.Map(result)
 
 	data, errMJson := json.Marshal(result)
-	if err != nil {
+	if errMJson != nil {
 		log.Println(errMJson)
 		return nil, errMJson
 	}
-	if errUJson := json.Unmarshal(data, &inMap); err != nil {
+	if errUJson := json.Unmarshal(data, &inMap); errUJson != nil {
 		log.Println(errUJson)
 		return nil, errUJson
 	}

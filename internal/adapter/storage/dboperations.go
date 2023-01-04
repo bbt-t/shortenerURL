@@ -15,7 +15,7 @@ func createTable(db *sqlx.DB, schema string) {
 	log.Println("SCHEMA CREATED")
 }
 
-func getHashUrl(db *sqlx.DB, k string) (string, error) {
+func getHashURL(db *sqlx.DB, k string) (string, error) {
 	var result string
 
 	err := db.Get(&result, "SELECT original_url FROM items WHERE short_url=$1", k)
@@ -38,7 +38,7 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 	}
 }
 
-func saveURl(db *sqlx.DB, userID uuid.UUID, k, v string) error {
+func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 	info := map[string]interface{}{
 		"user_id":      userID,
 		"short_url":    k,

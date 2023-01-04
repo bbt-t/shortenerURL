@@ -70,7 +70,7 @@ func (m *mapDBPlug) SaveShortURL(userID uuid.UUID, k, v string) error {
 	_, ok := m.mapURL[userID][k]
 	m.mutex.RUnlock()
 	if ok {
-		return errHttpConflict
+		return errHTTPConflict
 	}
 
 	m.mutex.Lock()

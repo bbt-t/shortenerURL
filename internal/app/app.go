@@ -41,7 +41,7 @@ func Run(cfg *configs.ServerCfg) {
 
 	service := usecase.NewShortener(repo)
 	h := handler.NewShortenerRoutes(service, cfg)
-	server := rest.NewHttpServer(cfg.ServerAddress, h.InitRoutes())
+	server := rest.NewHTTPServer(cfg.ServerAddress, h.InitRoutes())
 
 	//go func() {
 	//	if err := server.UP(); err != nil && err != http.ErrServerClosed {

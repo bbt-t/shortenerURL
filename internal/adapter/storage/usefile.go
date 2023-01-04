@@ -45,7 +45,7 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 
 	_, ok := data[userID][k]
 	if ok {
-		return errHttpConflict
+		return errHTTPConflict
 	}
 	data[userID][k] = v
 

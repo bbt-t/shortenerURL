@@ -7,5 +7,5 @@ var (
 	errDBFileDoesNotExist = errors.New("file does not exist")
 	errDBUnknownID        = errors.New("no such id in DB")
 	errDBEmpty            = errors.New("db is empty")
-	errHttpConflict       = errors.New("conflict: this URL has already been shortened before")
+	errHTTPConflict       = errors.New("conflict: this URL has already been shortened before")
 )

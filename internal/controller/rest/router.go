@@ -9,7 +9,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewHttpServer(address string, handler http.Handler) *Server {
+func NewHTTPServer(address string, handler http.Handler) *Server {
 	return &Server{
 		httpServer: &http.Server{
 			Addr:    address,
