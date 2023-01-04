@@ -149,6 +149,9 @@ func (f *fileDB) PingDB() error {
 }
 
 func (f *fileDB) NewUser(userID uuid.UUID) {
+	/*
+		Create new user in DB.
+	*/
 	_ = f.save(userID, "", "", true)
 }
 
