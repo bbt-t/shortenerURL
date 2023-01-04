@@ -1,44 +1,24 @@
-package app
+package handler
 
 import (
 	"fmt"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
-	"github.com/bbt-t/shortenerURL/configs"
 	"github.com/bbt-t/shortenerURL/pkg"
-
-	"github.com/go-chi/chi/v5"
 )
 
-func (h *ServerHandler) redirectToOriginalURL(w http.ResponseWriter, r *http.Request) {
-	/*
-		Handler for redirecting to original URL.
-		Get ID from the route  -> search for the original url in DB:
-			if it's found -> redirect
-			if not -> 404
-	*/
-	if originalURL, err := h.store.GetURL(chi.URLParam(r, "id")); err != nil {
-		log.Printf("ERROR : %s", err)
-		http.NotFound(w, r)
-	} else {
-		w.Header().Set("Location", originalURL)
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusTemporaryRedirect)
-	}
-}
-
-func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
+func (s ShortenerHandler) composeNewShortURL(w http.ResponseWriter, r *http.Request) {
 	/*
 		Handler for getting URL to shortened.
 		Received, run through the HASH-func and write (hash, original url)
 		to the DB and (hash only) response Body, sent response.
 	*/
-	cfg := configs.NewConfServ()
-
 	defer r.Body.Close()
 	payload, _ := io.ReadAll(r.Body)
 	query, err := url.ParseQuery(string(payload))
@@ -57,14 +37,14 @@ func (h *ServerHandler) takeAndSendURL(w http.ResponseWriter, r *http.Request) {
 
 	hashedVal := fmt.Sprintf("%d", pkg.HashShortening([]byte(originalURL)))
 
-	if err := h.store.SaveURL(hashedVal, originalURL); err != nil {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+	userID, _ := uuid.FromString(fmt.Sprintf("%v", claims["user_id"]))
+
+	if err := s.s.SaveShortURL(userID, hashedVal, originalURL); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 
-	shortURL := []byte(
-		fmt.Sprintf(
-			"http://%v:%v/%v", cfg.ServerAddress, cfg.Port, hashedVal),
-	)
+	shortURL := []byte(fmt.Sprintf("%v/%v", s.cfg.BaseURL, hashedVal))
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
