@@ -28,10 +28,7 @@ func (m *mapDBPlug) GetOriginalURL(k string) (string, error) {
 	/*
 		get info from the map by key.
 	*/
-	var (
-		result string
-		//ok     bool
-	)
+	var result string
 	defer m.mutex.RUnlock()
 	m.mutex.RLock()
 

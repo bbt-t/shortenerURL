@@ -28,6 +28,7 @@ func NewFileDB(pathFile string) DatabaseRepository {
 	}
 }
 
+// TODO: НЕ РАЮБОТАЕТ ! сделать на подобие с мапой!
 func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	/*
 		Create/overwrite and write to a file.gob (gob-format).
@@ -37,10 +38,10 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 
 	data, err := f.get()
 	if err != nil {
-		data = map[uuid.UUID]map[string]string{}
+		data = make(map[uuid.UUID]map[string]string)
 	}
 	if empty {
-		data[userID] = map[string]string{}
+		data[userID] = make(map[string]string)
 	}
 
 	_, ok := data[userID][k]
@@ -55,7 +56,7 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	)
 
 	if errOpen != nil {
-		fmt.Println("Cannot create ->", f.PathToFile)
+		fmt.Println("Cannot read file ->", f.PathToFile)
 		return errOpen
 	}
 
@@ -98,10 +99,7 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	/*
 		get value by key from file.
 	*/
-	var (
-		result string
-		ok     bool
-	)
+	var result string
 
 	defer f.mutex.RUnlock()
 
@@ -109,12 +107,15 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 		log.Fatal(err)
 	}
 	fileMap, _ := f.get()
-
 	f.mutex.RLock()
 	for _, v := range fileMap {
-		if result, ok = v[k]; !ok {
-			return "", errDBUnknownID
+		result = v[k]
+		if result != "" {
+			break
 		}
+	}
+	if result == "" {
+		return "", errDBUnknownID
 	}
 	return result, nil
 }
@@ -131,17 +132,21 @@ func (f *fileDB) PingDB() error {
 	/*
 		return error if file or filename does not exist
 	*/
-	if f.PathToFile == "" {
-		log.Println("--- missing filename ---")
-		return errDBFileDoesNotExist
-	}
-	if _, err := os.Stat(f.PathToFile); err != nil {
+	_, err := os.Stat(f.PathToFile)
+	if err != nil {
 		if os.IsNotExist(err) {
-			log.Println("--- file does not exist ---")
-			return errDBFileDoesNotExist
+			log.Println("--- file does not exist ---\n:: create new file ::")
+			_, err = os.OpenFile(f.PathToFile,
+				os.O_RDWR|os.O_TRUNC|os.O_CREATE,
+				0700,
+			)
+
 		}
 	}
-	return nil
+	if err == nil {
+		log.Println("FILE IS READY!")
+	}
+	return err
 }
 
 func (f *fileDB) NewUser(userID uuid.UUID) {
