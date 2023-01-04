@@ -28,7 +28,6 @@ func NewFileDB(pathFile string) DatabaseRepository {
 	}
 }
 
-// TODO: НЕ РАЮБОТАЕТ ! сделать на подобие с мапой!
 func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	/*
 		Create/overwrite and write to a file.gob (gob-format).
