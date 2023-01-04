@@ -3,10 +3,11 @@ package storage
 import (
 	"encoding/gob"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/gofrs/uuid"
 )
 
 type fileDB struct {
@@ -139,7 +140,6 @@ func (f *fileDB) PingDB() error {
 				os.O_RDWR|os.O_TRUNC|os.O_CREATE,
 				0700,
 			)
-
 		}
 	}
 	if err == nil {
@@ -156,7 +156,6 @@ func (f *fileDB) GetURLArrayByUser(userID uuid.UUID) (map[string]string, error) 
 	defer f.mutex.RUnlock()
 
 	fileMap, _ := f.get()
-
 	f.mutex.RLock()
 	urlArray, ok := fileMap[userID]
 	if !ok {

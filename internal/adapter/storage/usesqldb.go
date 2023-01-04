@@ -2,10 +2,11 @@ package storage
 
 import (
 	"encoding/json"
+	"log"
+
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"log"
 )
 
 type sqlDatabase struct {

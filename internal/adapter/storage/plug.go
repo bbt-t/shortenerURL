@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"github.com/gofrs/uuid"
 	"log"
 	"sync"
+
+	"github.com/gofrs/uuid"
 )
 
 type mapDBPlug struct {

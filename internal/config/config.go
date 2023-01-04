@@ -32,6 +32,7 @@ func NewConfServ() *ServerCfg {
 		fmt.Printf("%+v\n", err)
 	}
 
+	// Database selection by priority:
 	if cfg.FilePath != "" {
 		cfg.DBused = "file"
 	}

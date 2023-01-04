@@ -61,10 +61,3 @@ func checkUser(db *sqlx.DB, id uuid.UUID) (exists bool) {
 	}
 	return exists
 }
-
-// _, err = db.NamedExec(`INSERT INTO user (first_name,last_name,email) VALUES (:first,:last,:email)`,
-//map[string]interface{}{
-//"first": "Bin",
-//"last":  "Smuth",
-//"email": "bensmith@allblacks.nz",
-//})

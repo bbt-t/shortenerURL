@@ -1,8 +1,6 @@
 package rest
 
-import (
-	"github.com/go-chi/jwtauth/v5"
-)
+import "github.com/go-chi/jwtauth/v5"
 
 const _secret = "<jwt-secret>"
 

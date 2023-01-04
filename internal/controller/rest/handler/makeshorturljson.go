@@ -3,13 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/bbt-t/shortenerURL/pkg"
+
+	"github.com/gofrs/uuid"
 )
 
 func (s ShortenerHandler) composeNewShortURLJson(w http.ResponseWriter, r *http.Request) {

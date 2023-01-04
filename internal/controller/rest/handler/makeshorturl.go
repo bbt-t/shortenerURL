@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/bbt-t/shortenerURL/pkg"
+
+	"github.com/gofrs/uuid"
 )
 
 func (s ShortenerHandler) composeNewShortURL(w http.ResponseWriter, r *http.Request) {

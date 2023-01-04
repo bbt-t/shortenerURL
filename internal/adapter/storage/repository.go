@@ -4,7 +4,7 @@ import "github.com/gofrs/uuid"
 
 type DatabaseRepository interface {
 	/*
-		Interface for using DB. save and get values.
+		Interface for using DB.
 	*/
 	NewUser(userID uuid.UUID)
 	GetOriginalURL(shortURL string) (string, error)

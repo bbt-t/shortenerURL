@@ -1,31 +1,20 @@
 package app
 
 import (
+	"log"
+
 	"github.com/bbt-t/shortenerURL/internal/adapter/storage"
 	"github.com/bbt-t/shortenerURL/internal/config"
 	"github.com/bbt-t/shortenerURL/internal/controller/rest"
 	"github.com/bbt-t/shortenerURL/internal/controller/rest/handler"
 	"github.com/bbt-t/shortenerURL/internal/usecase"
-	"log"
 )
 
 func Run(cfg *configs.ServerCfg) {
 	/*
-		Создание используемых объектов через конструкторы для слоёв
-		и graceful shutdown.
+		Creating usable objects via constructors for layers and start app.
 	*/
 	var repo storage.DatabaseRepository
-
-	//if fp := cfg.FilePath; fp != "" {
-	//	repo = storage.NewFileDB(fp)
-	//}
-	//if dsn := cfg.DBConnectURL; dsn != "" {
-	//	repo = storage.NewSQLDatabase(dsn)
-	//}
-	//// Default in memory storage:
-	//if err := repo.PingDB(); err != nil {
-	//	repo = storage.NewMapDBPlug()
-	//}
 
 	switch cfg.DBused {
 	case "pg":
@@ -43,10 +32,5 @@ func Run(cfg *configs.ServerCfg) {
 	h := handler.NewShortenerRoutes(service, cfg)
 	server := rest.NewHTTPServer(cfg.ServerAddress, h.InitRoutes())
 
-	//go func() {
-	//	if err := server.UP(); err != nil && err != http.ErrServerClosed {
-	//		log.Fatalf("server :: %s :: DIED, reason --> %v", cfg.BaseURL, err)
-	//	}
-	//}()
 	log.Fatal(server.UP())
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bbt-t/shortenerURL/internal/controller/rest"
+
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/gofrs/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwt"

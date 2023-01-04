@@ -13,8 +13,6 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 )
 
-// здесь определяем роуты
-
 type reqURL struct {
 	URL string `json:"url"`
 }
