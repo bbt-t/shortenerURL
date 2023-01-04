@@ -1,0 +1,9 @@
+address = "127.0.0.1"
+port = "8080"
+base_url = "http://127.0.0.1:8080"
+loglevel = "debug"
+
+redis_host = "127.0.0.1"
+redis_port = "6379"
+
+db_file_name = "./data/DefaultDBName.db"
