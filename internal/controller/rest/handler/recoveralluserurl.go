@@ -16,9 +16,9 @@ func (s ShortenerHandler) recoverAllOriginalURLByUser(w http.ResponseWriter, r *
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
 
 	allURL, errGetURL := s.s.GetURLArrayByUser(userID)
-	result, errJson := json.Marshal(allURL)
-	if errJson != nil {
-		log.Println(errJson)
+	result, errJSON := json.Marshal(allURL)
+	if errJSON != nil {
+		log.Println(errJSON)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
