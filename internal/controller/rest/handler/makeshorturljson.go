@@ -68,7 +68,6 @@ func (s ShortenerHandler) composeNewShortURLJson(w http.ResponseWriter, r *http.
 		w.WriteHeader(http.StatusCreated)
 	}
 
-	w.WriteHeader(http.StatusCreated)
 	if _, err := w.Write(result); err != nil {
 		log.Printf("ERROR : %s", err)
 	}

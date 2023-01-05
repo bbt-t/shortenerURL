@@ -78,6 +78,7 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 
 		r.Get("/ping", s.pingDB)
 		r.Get("/{id}", s.recoverOriginalURL)
+		r.Get("/api/user/urls", s.recoverAllOriginalURLByUser)
 		//r.Post("/api/shorten/batch", ...) // <- for inc12
 		r.Post("/api/shorten", s.composeNewShortURLJson)
 		r.Post("/", s.composeNewShortURL)

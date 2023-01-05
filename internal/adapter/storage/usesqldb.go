@@ -38,12 +38,11 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 	}
 }
 
-func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, k, v string) error {
-	/*
-		Adding info to the DB.
-	*/
-	err := saveURL(d.db, userID, k /* hashed url */, v /* original url */)
-	return err
+func (d *sqlDatabase) NewUser(userID uuid.UUID) {
+	if checkUser(d.db, userID) {
+		return
+	}
+	addNewUser(d.db, userID)
 }
 
 func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
@@ -58,6 +57,43 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
+func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
+	userMap := User{}
+	allURL := map[string]string{}
+
+	if err := d.db.Get(
+		&userMap,
+		"SELECT short_url, original_url FROM items WHERE user_id=$1",
+		userID,
+	); err != nil {
+		return nil, err
+	}
+
+	//inMap := structs.Map(result)
+
+	data, errMJson := json.Marshal(userMap)
+	if errMJson != nil {
+		log.Println(errMJson)
+		return nil, errMJson
+	}
+	if errUJson := json.Unmarshal(data, &allURL); errUJson != nil {
+		log.Println(errUJson)
+		return nil, errUJson
+	}
+
+	result := convertToArrayMap(allURL)
+
+	return result, nil
+}
+
+func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, k, v string) error {
+	/*
+		Adding info to the DB.
+	*/
+	err := saveURL(d.db, userID, k /* hashed url */, v /* original url */)
+	return err
+}
+
 func (d *sqlDatabase) PingDB() error {
 	/*
 		Checking connection with ctx.Background.
@@ -69,32 +105,4 @@ func (d *sqlDatabase) PingDB() error {
 		log.Println("Postgres is READY!")
 	}
 	return err
-}
-
-func (d *sqlDatabase) NewUser(userID uuid.UUID) {
-	if checkUser(d.db, userID) {
-		return
-	}
-	addNewUser(d.db, userID)
-}
-
-func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) (map[string]string, error) {
-	result := User{}
-	inMap := map[string]string{}
-
-	err := d.db.Get(&result, "SELECT short_url, original_url FROM items WHERE user_id=$1", userID)
-
-	//inMap := structs.Map(result)
-
-	data, errMJson := json.Marshal(result)
-	if errMJson != nil {
-		log.Println(errMJson)
-		return nil, errMJson
-	}
-	if errUJson := json.Unmarshal(data, &inMap); errUJson != nil {
-		log.Println(errUJson)
-		return nil, errUJson
-	}
-
-	return inMap, err
 }

@@ -25,6 +25,14 @@ func NewMapDBPlug() DatabaseRepository {
 	}
 }
 
+func (m *mapDBPlug) NewUser(userID uuid.UUID) {
+	defer m.mutex.Unlock()
+	m.mutex.Lock()
+	if nil == m.mapURL[userID] {
+		m.mapURL[userID] = make(map[string]string)
+	}
+}
+
 func (m *mapDBPlug) GetOriginalURL(k string) (string, error) {
 	/*
 		get info from the map by key.
@@ -45,19 +53,21 @@ func (m *mapDBPlug) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (m *mapDBPlug) GetURLArrayByUser(userID uuid.UUID) (map[string]string, error) {
+func (m *mapDBPlug) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
 	/*
 		Take all saved urls.
 	*/
+
 	defer m.mutex.RUnlock()
 	m.mutex.RLock()
 
 	allURL, ok := m.mapURL[userID]
-	if !ok {
+	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
+	result := convertToArrayMap(allURL)
 
-	return allURL, nil
+	return result, nil
 }
 
 func (m *mapDBPlug) SaveShortURL(userID uuid.UUID, k, v string) error {
@@ -70,7 +80,6 @@ func (m *mapDBPlug) SaveShortURL(userID uuid.UUID, k, v string) error {
 	if ok {
 		return errHTTPConflict
 	}
-
 	m.mutex.Lock()
 	m.mapURL[userID][k] = v
 	m.mutex.Unlock()
@@ -80,12 +89,4 @@ func (m *mapDBPlug) SaveShortURL(userID uuid.UUID, k, v string) error {
 func (m *mapDBPlug) PingDB() error {
 	log.Println("MAP IS READY!")
 	return nil
-}
-
-func (m *mapDBPlug) NewUser(userID uuid.UUID) {
-	defer m.mutex.Unlock()
-	m.mutex.Lock()
-	if m.mapURL[userID] == nil {
-		m.mapURL[userID] = make(map[string]string)
-	}
 }

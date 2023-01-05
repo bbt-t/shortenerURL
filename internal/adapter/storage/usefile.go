@@ -95,6 +95,13 @@ func (f *fileDB) get() (map[uuid.UUID]map[string]string, error) {
 	return data, nil
 }
 
+func (f *fileDB) NewUser(userID uuid.UUID) {
+	/*
+		Create new user in DB.
+	*/
+	_ = f.save(userID, "", "", true)
+}
+
 func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	/*
 		get value by key from file.
@@ -117,6 +124,19 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	if result == "" {
 		return "", errDBUnknownID
 	}
+	return result, nil
+}
+
+func (f *fileDB) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
+	defer f.mutex.RUnlock()
+
+	fileMap, _ := f.get()
+	f.mutex.RLock()
+	allURL, ok := fileMap[userID]
+	if !ok || len(allURL) == 0 {
+		return nil, errDBEmpty
+	}
+	result := convertToArrayMap(allURL)
 	return result, nil
 }
 
@@ -146,23 +166,4 @@ func (f *fileDB) PingDB() error {
 		log.Println("FILE IS READY!")
 	}
 	return err
-}
-
-func (f *fileDB) NewUser(userID uuid.UUID) {
-	/*
-		Create new user in DB.
-	*/
-	_ = f.save(userID, "", "", true)
-}
-
-func (f *fileDB) GetURLArrayByUser(userID uuid.UUID) (map[string]string, error) {
-	defer f.mutex.RUnlock()
-
-	fileMap, _ := f.get()
-	f.mutex.RLock()
-	urlArray, ok := fileMap[userID]
-	if !ok {
-		return nil, errDBEmpty
-	}
-	return urlArray, nil
 }
