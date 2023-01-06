@@ -55,6 +55,10 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 }
 
 func checkUser(db *sqlx.DB, id uuid.UUID) (exists bool) {
+	/*
+		Checking if the user exists in the DB.
+		param id: user_id
+	*/
 	err := db.QueryRow(fmt.Sprintf("SELECT exists (%s)", id)).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %v", err)

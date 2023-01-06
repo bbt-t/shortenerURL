@@ -3,14 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"log"
 	"net/http"
+
+	"github.com/gofrs/uuid"
 )
 
 func (s ShortenerHandler) recoverAllOriginalURLByUser(w http.ResponseWriter, r *http.Request) {
 	/*
-		получить ИД пользователя -> сходить в БД -> записать в json -> выдать
+		Get user id -> go to db -> write to json -> response
 	*/
 	temp := r.Context().Value("user_id")
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))

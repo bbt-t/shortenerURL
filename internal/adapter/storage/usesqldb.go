@@ -28,7 +28,6 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 
 	if err != nil {
 		log.Println(err)
-		//log.Println(errDBNotSelected)
 		return nil
 	}
 

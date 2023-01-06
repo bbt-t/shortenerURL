@@ -3,17 +3,17 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/pkg"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/bbt-t/shortenerURL/pkg"
 )
 
 func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) {
 	/*
-		Handler for redirecting to original URL.
-		get ID from the route  -> search for the original url in DB:
-			if not -> 404
+		Accepts multiple URLs in the request body to shorten,
+		changes "original_url" to "short_url".
 	*/
 	var urlBatch []map[string]string
 
@@ -40,7 +40,8 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 
 	for _, item := range urlBatch {
 		for _, v := range item {
-			item["original_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
+			delete(item, "original_url")
+			item["short_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
 		}
 	}
 
