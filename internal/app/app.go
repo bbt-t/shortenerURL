@@ -1,7 +1,12 @@
 package app
 
 import (
+	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/bbt-t/shortenerURL/internal/adapter/storage"
 	"github.com/bbt-t/shortenerURL/internal/config"
@@ -32,5 +37,20 @@ func Run(cfg *configs.ServerCfg) {
 	h := handler.NewShortenerRoutes(service, cfg)
 	server := rest.NewHTTPServer(cfg.ServerAddress, h.InitRoutes())
 
-	log.Fatal(server.UP())
+	go func() {
+		log.Println(server.UP())
+	}()
+	// Graceful shutdown:
+	gracefulStop := make(chan os.Signal, 1)
+	signal.Notify(gracefulStop, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	<-gracefulStop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Stop(ctx); err != nil {
+		log.Printf("! Error shutting down server: !\n%v", err)
+	} else {
+		log.Println("! SERVER STOPPED !")
+	}
 }
