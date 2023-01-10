@@ -22,9 +22,9 @@ func NewConfServ() *ServerCfg {
 	*/
 	var cfg ServerCfg
 
-	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
-	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
-	flag.StringVar(&cfg.FilePath, "f", "", "file path")
+	flag.StringVarP(&cfg.ServerAddress, "address", "a", "", "server address")
+	flag.StringVarP(&cfg.BaseURL, "base", "b", "", "base url")
+	flag.StringVarP(&cfg.FilePath, "file", "f", "", "file path")
 
 	flag.Parse()
 
