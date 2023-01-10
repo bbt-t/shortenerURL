@@ -63,7 +63,7 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 		//middleware.ContentCharset(allowedCharsets... /* list unpacking */),
 		//middleware.AllowContentType(allowContentTypes... /* list unpacking */),
 		// Compress:
-		middleware.AllowContentEncoding("gzip"),
+		//middleware.AllowContentEncoding("gzip"),
 		middleware.Compress(5),
 		// JWT
 		jwtauth.Verifier(rest.TokenAuth),
