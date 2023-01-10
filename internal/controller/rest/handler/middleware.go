@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/net/context"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -54,30 +55,39 @@ func (s ShortenerHandler) GetterSetterAuthJWTCookie(next http.Handler) http.Hand
 }
 
 func (s ShortenerHandler) Gzip(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			next.ServeHTTP(w, r)
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !strings.Contains(request.Header.Get("Content-Encoding"), "gzip") {
+			next.ServeHTTP(writer, request)
 			return
 		}
-		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+		request.Header.Del("Content-Length")
+		reader, err := gzip.NewReader(request.Body)
 		if err != nil {
-			io.WriteString(w, err.Error())
+			io.WriteString(writer, err.Error())
 			return
 		}
-		defer gz.Close()
 
-		w.Header().Set("Content-Encoding", "gzip")
-		next.ServeHTTP(
-			gzipWriter{
-				ResponseWriter: w,
-				Writer:         gz,
-			},
-			r,
-		)
+		defer reader.Close()
+
+		request.Body = gzipReader{
+			reader,
+			request.Body,
+		}
+		log.Println("GZIP MIDDLEWARE")
+		next.ServeHTTP(writer, request)
 	})
 }
 
-type gzipWriter struct {
-	http.ResponseWriter
-	Writer io.Writer
+type gzipReader struct {
+	*gzip.Reader
+	io.Closer
+}
+
+func (r gzipReader) Close() error {
+	if err := r.Closer.Close(); err != nil {
+		log.Print(err.Error())
+		return err
+	}
+
+	return nil
 }

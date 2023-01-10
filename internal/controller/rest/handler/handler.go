@@ -53,8 +53,11 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 		//middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
 		middleware.Logger,
 		middleware.Recoverer,
+
+		s.Gzip,
+
 		// Working with paths:
-		middleware.CleanPath,
+		//middleware.CleanPath,
 		//middleware.RedirectSlashes,
 		// Throttle:
 		//middleware.ThrottleBacklog(10, 50, time.Second*10),
@@ -67,7 +70,6 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 		//middleware.Compress(5),
 		// JWT
 		jwtauth.Verifier(rest.TokenAuth),
-		s.Gzip,
 	)
 
 	// Protected routes:
