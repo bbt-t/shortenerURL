@@ -30,7 +30,7 @@ func Run(cfg *configs.ServerCfg) {
 		repo = storage.NewMapDBPlug()
 	}
 	if err := repo.PingDB(); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	service := usecase.NewShortener(repo)

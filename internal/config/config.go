@@ -13,6 +13,7 @@ type ServerCfg struct {
 	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"`
 	DBConnectURL  string `env:"DATABASE_DSN"`      //envDefault:"host=localhost port=5432 user=postgres password=$apr1$dISdUBfu$NCBQX/q3R2WUV1JppxP8l0 dbname=postgres sslmode=disable"`
 	DBused        string
+	//SecretKey     string
 }
 
 func NewConfServ() *ServerCfg {
@@ -20,12 +21,13 @@ func NewConfServ() *ServerCfg {
 		Initialize a new conf.
 		flag -> env, env-variables take precedence.
 	*/
-	var cfg ServerCfg
+	cfg := ServerCfg{}
 
 	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
 	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
 	flag.StringVar(&cfg.FilePath, "f", "", "file path")
 	flag.StringVar(&cfg.DBConnectURL, "d", "", "db url (only for pg")
+	//flag.StringVar(&cfg.SecretKey, "k", "", "secret key to sign uid cookies")
 	flag.Parse()
 
 	if err := env.Parse(&cfg); err != nil {

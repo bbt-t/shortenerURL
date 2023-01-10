@@ -1,15 +1,12 @@
 package handler
 
 import (
-	"time"
-
 	"github.com/bbt-t/shortenerURL/internal/config"
 	"github.com/bbt-t/shortenerURL/internal/controller/rest"
 	"github.com/bbt-t/shortenerURL/internal/usecase"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httprate"
 	"github.com/go-chi/jwtauth/v5"
 )
 
@@ -39,18 +36,18 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/
-	allowedCharsets, allowContentTypes :=
-		[]string{
-			"UTF-8",
-			"Latin-1",
-			"",
-		},
-		[]string{
-			"application/json",
-			"text/plain",
-			"application/x-www-form-urlencoded",
-			"multipart/form-data",
-		}
+	//allowedCharsets, allowContentTypes :=
+	//	[]string{
+	//		"UTF-8",
+	//		"Latin-1",
+	//		"",
+	//	},
+	//	[]string{
+	//		"application/json",
+	//		"text/plain",
+	//		"application/x-www-form-urlencoded",
+	//		"multipart/form-data",
+	//	}
 
 	route.Use(
 		//middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
@@ -58,13 +55,13 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 		middleware.Recoverer,
 		// Working with paths:
 		middleware.CleanPath,
-		middleware.RedirectSlashes,
+		//middleware.RedirectSlashes,
 		// Throttle:
-		middleware.ThrottleBacklog(10, 50, time.Second*10),
-		httprate.LimitByIP(100, 1*time.Minute),
+		//middleware.ThrottleBacklog(10, 50, time.Second*10),
+		//httprate.LimitByIP(100, 1*time.Minute),
 		// Allowed content:
-		middleware.ContentCharset(allowedCharsets... /* list unpacking */),
-		middleware.AllowContentType(allowContentTypes... /* list unpacking */),
+		//middleware.ContentCharset(allowedCharsets... /* list unpacking */),
+		//middleware.AllowContentType(allowContentTypes... /* list unpacking */),
 		// Compress:
 		middleware.AllowContentEncoding("gzip"),
 		middleware.Compress(5, "application/json", "text/plain"),
