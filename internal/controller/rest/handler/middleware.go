@@ -65,12 +65,11 @@ func (s ShortenerHandler) customGzipCompress(next http.Handler) http.Handler {
 		}
 		r.Header.Del("Content-Length")
 		reader, err := gzip.NewReader(r.Body)
-		defer reader.Close()
-
 		if err != nil {
 			io.WriteString(w, err.Error())
 			return
 		}
+		defer reader.Close()
 		r.Body = gzipReader{
 			reader,
 			r.Body,
