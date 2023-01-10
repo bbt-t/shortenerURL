@@ -31,51 +31,26 @@ func NewShortenerRoutes(s *usecase.ShortenerService, cfg *config.ServerCfg) *Sho
 }
 
 func (s ShortenerHandler) InitRoutes() *chi.Mux {
-	route := chi.NewRouter()
-
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/
-	//allowedCharsets, allowContentTypes :=
-	//	[]string{
-	//		"UTF-8",
-	//		"Latin-1",
-	//		"",
-	//	},
-	//	[]string{
-	//		"application/json",
-	//		"text/plain",
-	//		"application/x-www-form-urlencoded",
-	//		"multipart/form-data",
-	//	}
-
+	route := chi.NewRouter()
 	route.Use(
 		//middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
 		middleware.Logger,
 		middleware.Recoverer,
-
-		s.Gzip,
-
-		// Working with paths:
-		//middleware.CleanPath,
-		//middleware.RedirectSlashes,
-		// Throttle:
-		//middleware.ThrottleBacklog(10, 50, time.Second*10),
-		//httprate.LimitByIP(100, 1*time.Minute),
-		// Allowed content:
-		//middleware.ContentCharset(allowedCharsets... /* list unpacking */),
-		//middleware.AllowContentType(allowContentTypes... /* list unpacking */),
 		// Compress:
-		//middleware.AllowContentEncoding("gzip"),
-		//middleware.Compress(5),
+		s.customGzipCompress,
+		// Working with paths:
+		middleware.CleanPath,
 		// JWT
 		jwtauth.Verifier(rest.TokenAuth),
 	)
-
 	// Protected routes:
 	route.Group(func(r chi.Router) {
+		// Cookie Middleware:
 		r.Use(s.GetterSetterAuthJWTCookie)
-
+		// Routes:
 		r.Get("/ping", s.pingDB)
 		r.Get("/{id}", s.recoverOriginalURL)
 		r.Get("/api/user/urls", s.recoverAllOriginalURLByUser)

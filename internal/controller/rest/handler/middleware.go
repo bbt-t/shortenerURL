@@ -54,27 +54,27 @@ func (s ShortenerHandler) GetterSetterAuthJWTCookie(next http.Handler) http.Hand
 	})
 }
 
-func (s ShortenerHandler) Gzip(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if !strings.Contains(request.Header.Get("Content-Encoding"), "gzip") {
-			next.ServeHTTP(writer, request)
+func (s ShortenerHandler) customGzipCompress(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
 			return
 		}
-		request.Header.Del("Content-Length")
-		reader, err := gzip.NewReader(request.Body)
+		r.Header.Del("Content-Length")
+		reader, err := gzip.NewReader(r.Body)
 		if err != nil {
-			io.WriteString(writer, err.Error())
+			io.WriteString(w, err.Error())
 			return
 		}
 
 		defer reader.Close()
 
-		request.Body = gzipReader{
+		r.Body = gzipReader{
 			reader,
-			request.Body,
+			r.Body,
 		}
 		log.Println("GZIP MIDDLEWARE")
-		next.ServeHTTP(writer, request)
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -88,6 +88,5 @@ func (r gzipReader) Close() error {
 		log.Print(err.Error())
 		return err
 	}
-
 	return nil
 }
