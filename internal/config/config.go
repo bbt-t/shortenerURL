@@ -32,5 +32,9 @@ func NewConfServ() *ServerCfg {
 		fmt.Printf("%+v\n", err)
 	}
 
-	return &cfg
+	return &ServerCfg{
+		ServerAddress: cfg.ServerAddress,
+		BaseURL:       cfg.BaseURL,
+		FilePath:      cfg.FilePath,
+	}
 }
