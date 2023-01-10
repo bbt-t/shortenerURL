@@ -13,23 +13,20 @@ type ServerCfg struct {
 	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"`
 	DBConnectURL  string `env:"DATABASE_DSN"`      //envDefault:"host=localhost port=5432 user=postgres password=$apr1$dISdUBfu$NCBQX/q3R2WUV1JppxP8l0 dbname=postgres sslmode=disable"`
 	DBused        string
-	SecretKey     string
 }
 
 type FlagConfig struct {
 	ServerAddress   string
 	BaseURL         string
 	FileStoragePath string
-	SecretKey       string
 }
 
-var flagCfg = FlagConfig{}
+var _flagCfg = FlagConfig{}
 
 func init() {
-	flag.StringVar(&flagCfg.ServerAddress, "a", "", "server address")
-	flag.StringVar(&flagCfg.BaseURL, "b", "", "base url")
-	flag.StringVar(&flagCfg.FileStoragePath, "f", "", "file path")
-	flag.StringVar(&flagCfg.SecretKey, "k", "", "secret key to sign uid cookies")
+	flag.StringVar(&_flagCfg.ServerAddress, "a", "", "server address")
+	flag.StringVar(&_flagCfg.BaseURL, "b", "", "base url")
+	flag.StringVar(&_flagCfg.FileStoragePath, "f", "", "file path")
 }
 
 func NewConfServ() *ServerCfg {
@@ -43,19 +40,16 @@ func NewConfServ() *ServerCfg {
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-	cfg.UpdateFromFlags()
+	cfg.updateFromFlags()
 
 	return &cfg
 }
 
-func (cfg *ServerCfg) UpdateFromFlags() {
-	if flagCfg.BaseURL != "" {
-		cfg.BaseURL = flagCfg.BaseURL
+func (cfg *ServerCfg) updateFromFlags() {
+	if _flagCfg.BaseURL != "" {
+		cfg.BaseURL = _flagCfg.BaseURL
 	}
-	if flagCfg.ServerAddress != "" {
-		cfg.ServerAddress = flagCfg.ServerAddress
-	}
-	if flagCfg.SecretKey != "" {
-		cfg.SecretKey = flagCfg.SecretKey
+	if _flagCfg.ServerAddress != "" {
+		cfg.ServerAddress = _flagCfg.ServerAddress
 	}
 }
