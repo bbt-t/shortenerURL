@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"compress/gzip"
 	"fmt"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bbt-t/shortenerURL/internal/controller/rest"
@@ -48,4 +51,33 @@ func (s ShortenerHandler) GetterSetterAuthJWTCookie(next http.Handler) http.Hand
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (s ShortenerHandler) Gzip(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+		if err != nil {
+			io.WriteString(w, err.Error())
+			return
+		}
+		defer gz.Close()
+
+		w.Header().Set("Content-Encoding", "gzip")
+		next.ServeHTTP(
+			gzipWriter{
+				ResponseWriter: w,
+				Writer:         gz,
+			},
+			r,
+		)
+	})
+}
+
+type gzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
 }
