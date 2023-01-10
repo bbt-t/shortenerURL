@@ -1,8 +1,8 @@
 package config
 
 import (
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 
 	"github.com/caarlos0/env/v6"
 )
