@@ -15,41 +15,22 @@ type ServerCfg struct {
 	DBused        string
 }
 
-type flagConfig struct {
-	ServerAddress   string
-	BaseURL         string
-	FileStoragePath string
-}
-
-var _flagCfg = flagConfig{}
-
-func init() {
-	flag.StringVar(&_flagCfg.ServerAddress, "a", "", "server address")
-	flag.StringVar(&_flagCfg.BaseURL, "b", "", "base url")
-	flag.StringVar(&_flagCfg.FileStoragePath, "f", "", "file path")
-}
-
 func NewConfServ() *ServerCfg {
 	/*
 		Initialize a new conf.
 		flag -> env, env-variables take precedence.
 	*/
 	var cfg ServerCfg
+
+	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
+	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
+	flag.StringVar(&cfg.FilePath, "f", "", "file path")
+
 	flag.Parse()
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-	cfg.updateFromFlags()
 
 	return &cfg
-}
-
-func (cfg *ServerCfg) updateFromFlags() {
-	if _flagCfg.BaseURL != "" {
-		cfg.BaseURL = _flagCfg.BaseURL
-	}
-	if _flagCfg.ServerAddress != "" {
-		cfg.ServerAddress = _flagCfg.ServerAddress
-	}
 }
