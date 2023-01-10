@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/bbt-t/shortenerURL/configs"
 	"github.com/bbt-t/shortenerURL/internal/app"
+	"github.com/bbt-t/shortenerURL/internal/config"
 	_ "github.com/bbt-t/shortenerURL/pkg/logging"
 )
 
@@ -12,5 +12,5 @@ func main() {
 		Parse system ENVs and start http-server.
 	*/
 	cfg := configs.NewConfServ()
-	app.Start(cfg)
+	app.Run(cfg)
 }
