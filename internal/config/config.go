@@ -1,9 +1,8 @@
 package config
 
 import (
+	"flag"
 	"fmt"
-	flag "github.com/spf13/pflag"
-
 	"github.com/caarlos0/env/v6"
 )
 
@@ -22,19 +21,14 @@ func NewConfServ() *ServerCfg {
 	*/
 	var cfg ServerCfg
 
-	flag.StringVarP(&cfg.ServerAddress, "address", "a", "", "server address")
-	flag.StringVarP(&cfg.BaseURL, "base", "b", "", "base url")
-	flag.StringVarP(&cfg.FilePath, "file", "f", "", "file path")
+	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
+	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
+	flag.StringVar(&cfg.FilePath, "f", "", "file path")
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
-
 	flag.Parse()
 
-	return &ServerCfg{
-		ServerAddress: cfg.ServerAddress,
-		BaseURL:       cfg.BaseURL,
-		FilePath:      cfg.FilePath,
-	}
+	return &cfg
 }
