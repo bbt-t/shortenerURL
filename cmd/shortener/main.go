@@ -11,6 +11,6 @@ func main() {
 		"Application entry point".
 		Parse system ENVs and start http-server.
 	*/
-	cfg := configs.NewConfServ()
+	cfg := config.NewConfServ()
 	app.Run(cfg)
 }

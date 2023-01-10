@@ -20,10 +20,10 @@ type respURL struct {
 
 type ShortenerHandler struct {
 	s   *usecase.ShortenerService
-	cfg *configs.ServerCfg
+	cfg *config.ServerCfg
 }
 
-func NewShortenerRoutes(s *usecase.ShortenerService, cfg *configs.ServerCfg) *ShortenerHandler {
+func NewShortenerRoutes(s *usecase.ShortenerService, cfg *config.ServerCfg) *ShortenerHandler {
 	return &ShortenerHandler{
 		s:   s,
 		cfg: cfg,

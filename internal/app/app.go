@@ -15,7 +15,7 @@ import (
 	"github.com/bbt-t/shortenerURL/internal/usecase"
 )
 
-func Run(cfg *configs.ServerCfg) {
+func Run(cfg *config.ServerCfg) {
 	/*
 		Creating usable objects via constructors for layers and start app.
 	*/

@@ -12,7 +12,7 @@ package handler
 //	"github.com/bbt-t/shortenerURL/internal/config"
 //)
 //
-//var cfg = &configs.ServerCfg{
+//var cfg = &config.ServerCfg{
 //	ServerAddress: "127.0.0.1:5001",
 //	BaseURL:       "http://127.0.0.1:5001",
 //}
