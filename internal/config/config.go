@@ -26,11 +26,11 @@ func NewConfServ() *ServerCfg {
 	flag.StringVarP(&cfg.BaseURL, "base", "b", "", "base url")
 	flag.StringVarP(&cfg.FilePath, "file", "f", "", "file path")
 
-	flag.Parse()
-
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
+
+	flag.Parse()
 
 	return &ServerCfg{
 		ServerAddress: cfg.ServerAddress,
