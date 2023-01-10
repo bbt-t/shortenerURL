@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+
 	"github.com/caarlos0/env/v6"
 )
 
@@ -17,18 +18,26 @@ type ServerCfg struct {
 func NewConfServ() *ServerCfg {
 	/*
 		Initialize a new conf.
-		flag -> env, env-variables take precedence.
 	*/
 	var cfg ServerCfg
 
 	flag.StringVar(&cfg.ServerAddress, "a", "", "server address")
 	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
 	flag.StringVar(&cfg.FilePath, "f", "", "file path")
+	flag.StringVar(&cfg.DBConnectURL, "d", "", "postgres DSN (url)")
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)
 	}
 	flag.Parse()
+
+	// Database selection by priority:
+	if cfg.FilePath != "" {
+		cfg.DBused = "file"
+	}
+	if cfg.DBConnectURL != "" {
+		cfg.DBused = "pg"
+	}
 
 	return &cfg
 }
