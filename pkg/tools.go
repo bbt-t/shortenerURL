@@ -1,17 +1,12 @@
 package pkg
 
 import (
-	"context"
+	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"hash/fnv"
 	"log"
 	"net/url"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/joho/godotenv"
-	"github.com/nikoksr/notify"
-	"github.com/nikoksr/notify/service/telegram"
+	"strings"
 )
 
 func HashShortening(s []byte) uint32 {
@@ -35,50 +30,29 @@ func URLValidation(inpURL string) bool {
 	if err != nil {
 		log.Println(err)
 	}
-	return nil == err
+	return errors.Is(err, nil)
 }
 
-func SendMessage[T int | int64](idToSend T, msg string) {
+func HostOnly(address string) string {
 	/*
-		Send message via telegram bot. Need BOT_TOKEN and recipient id.
-		param msg: message to be sent
+		Separating server IP.
+		param address: "ip:port"
 	*/
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println(err)
+	if !strings.Contains(address, ":") {
+		return address
 	}
-
-	telegramService, _ := telegram.New(os.Getenv("BOT_TOKEN"))
-	// Write correct telegram/chat id (var idToSend)
-	telegramService.AddReceivers(int64(idToSend) /* to whom send */)
-	notify.UseServices(telegramService)
-
-	if err := notify.Send(
-		context.Background(),
-		"📩 SHORTENER SERVICE 🔊",
-		msg,
-	); err != nil {
-		log.Printf("ERROR : %v", err)
-	}
+	return strings.Split(address, ":")[0]
 }
 
-func StopNotifyAdmin() {
+func EncryptPassword(password string) (string, error) {
 	/*
-		Notifies via telegram about the exit.
+		Encrypt the password.
 	*/
-	signalCancel := make(chan os.Signal, 1)
-	signal.Notify(signalCancel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		for {
-			s := <-signalCancel
-			switch s {
-			case os.Interrupt:
-				fallthrough
-			case syscall.SIGINT:
-				fallthrough
-			case syscall.SIGTERM:
-				//SendMessage(id, "STOPPED")
-				os.Exit(1)
-			}
-		}
-	}()
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func AssertEqualPassword(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return errors.Is(err, nil)
 }
