@@ -19,7 +19,7 @@ import (
 
 func (s ShortenerHandler) GetterSetterAuthJWTCookie(next http.Handler) http.Handler {
 	/*
-		Cookies middleware.
+		Cookies-middleware.
 	*/
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var userID string
@@ -55,6 +55,9 @@ func (s ShortenerHandler) GetterSetterAuthJWTCookie(next http.Handler) http.Hand
 }
 
 func (s ShortenerHandler) customGzipCompress(next http.Handler) http.Handler {
+	/*
+		Custom compress-middleware.
+	*/
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
 			next.ServeHTTP(w, r)
@@ -62,18 +65,16 @@ func (s ShortenerHandler) customGzipCompress(next http.Handler) http.Handler {
 		}
 		r.Header.Del("Content-Length")
 		reader, err := gzip.NewReader(r.Body)
+		defer reader.Close()
+
 		if err != nil {
 			io.WriteString(w, err.Error())
 			return
 		}
-
-		defer reader.Close()
-
 		r.Body = gzipReader{
 			reader,
 			r.Body,
 		}
-		log.Println("GZIP MIDDLEWARE")
 		next.ServeHTTP(w, r)
 	})
 }

@@ -10,18 +10,18 @@ import (
 type ServerCfg struct {
 	ServerAddress string `env:"SERVER_ADDRESS"    envDefault:"127.0.0.1:8080"`
 	BaseURL       string `env:"BASE_URL"          envDefault:"http://127.0.0.1:8080"`
-	FilePath      string `env:"FILE_STORAGE_PATH"` //envDefault:"FILE_OBJ.gob"`
-	DBConnectURL  string `env:"DATABASE_DSN"`      //envDefault:"host=localhost port=5432 user=postgres password=$apr1$dISdUBfu$NCBQX/q3R2WUV1JppxP8l0 dbname=postgres sslmode=disable"`
+	FilePath      string `env:"FILE_STORAGE_PATH"`
+	DBConnectURL  string `env:"DATABASE_DSN"`
 	DBused        string
 }
 
-type FlagConfig struct {
+type flagConfig struct {
 	ServerAddress   string
 	BaseURL         string
 	FileStoragePath string
 }
 
-var _flagCfg = FlagConfig{}
+var _flagCfg = flagConfig{}
 
 func init() {
 	flag.StringVar(&_flagCfg.ServerAddress, "a", "", "server address")
