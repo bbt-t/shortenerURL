@@ -70,7 +70,7 @@ func convertToArrayMap(mapURL map[string]string) []map[string]string {
 	var urlArray []map[string]string
 
 	for k, v := range mapURL {
-		temp := map[string]string{k: v}
+		temp := map[string]string{"short_url": k, "original_url": v}
 		urlArray = append(urlArray, temp)
 	}
 	return urlArray
