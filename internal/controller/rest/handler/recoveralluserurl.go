@@ -16,7 +16,7 @@ func (s ShortenerHandler) recoverAllOriginalURLByUser(w http.ResponseWriter, r *
 	temp := r.Context().Value("user_id")
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
 
-	allURL, errGetURL := s.s.GetURLArrayByUser(userID)
+	allURL, errGetURL := s.s.GetURLArrayByUser(userID, s.cfg.BaseURL)
 	if errGetURL != nil {
 		w.WriteHeader(http.StatusNoContent)
 		return

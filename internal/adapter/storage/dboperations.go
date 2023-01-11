@@ -66,11 +66,11 @@ func checkUser(db *sqlx.DB, id uuid.UUID) (exists bool) {
 	return exists
 }
 
-func convertToArrayMap(mapURL map[string]string) []map[string]string {
+func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
 	var urlArray []map[string]string
 
 	for k, v := range mapURL {
-		temp := map[string]string{"short_url": k, "original_url": v}
+		temp := map[string]string{"short_url": fmt.Sprintf("%s/%s", baseURL, k), "original_url": v}
 		urlArray = append(urlArray, temp)
 	}
 	return urlArray

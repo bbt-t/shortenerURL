@@ -5,7 +5,7 @@ import "github.com/gofrs/uuid"
 type DatabaseRepository interface {
 	NewUser(userID uuid.UUID)
 	GetOriginalURL(shortURL string) (string, error)
-	GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error)
+	GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error)
 	SaveShortURL(userID uuid.UUID, hashURL, originalURL string) error
 	PingDB() error
 }
@@ -29,8 +29,8 @@ func (s ShortenerService) GetOriginalURL(shortURL string) (string, error) {
 	return result, err
 }
 
-func (s ShortenerService) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
-	result, err := s.repo.GetURLArrayByUser(userID)
+func (s ShortenerService) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+	result, err := s.repo.GetURLArrayByUser(userID, baseURL)
 	return result, err
 }
 

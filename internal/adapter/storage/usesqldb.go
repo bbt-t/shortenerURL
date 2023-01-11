@@ -56,7 +56,7 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
+func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	userMap := User{}
 	allURL := make(map[string]string)
 
@@ -80,7 +80,7 @@ func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, 
 		return nil, errUJson
 	}
 
-	result := convertToArrayMap(allURL)
+	result := convertToArrayMap(allURL, baseURL)
 
 	return result, nil
 }

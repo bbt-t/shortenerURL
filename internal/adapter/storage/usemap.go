@@ -53,7 +53,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (m *mapDB) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
+func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	/*
 		Take all saved urls.
 	*/
@@ -65,7 +65,7 @@ func (m *mapDB) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error)
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
-	result := convertToArrayMap(allURL)
+	result := convertToArrayMap(allURL, baseURL)
 
 	return result, nil
 }
