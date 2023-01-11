@@ -58,7 +58,7 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 
 func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
 	userMap := User{}
-	allURL := map[string]string{}
+	allURL := make(map[string]string)
 
 	if err := d.db.Get(
 		&userMap,
