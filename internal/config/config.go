@@ -17,7 +17,7 @@ type ServerCfg struct {
 
 func NewConfServ() *ServerCfg {
 	/*
-		Initialize a new conf.
+		Initialize a new config.
 	*/
 	var cfg ServerCfg
 
