@@ -40,7 +40,8 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 		middleware.Logger,
 		middleware.Recoverer,
 		// Compress:
-		s.customGzipCompress,
+		middleware.AllowContentEncoding("gzip"),
+		middleware.Compress(5, "text/html", "text/plain", "application/json"),
 		// Working with paths:
 		middleware.CleanPath,
 		// JWT
