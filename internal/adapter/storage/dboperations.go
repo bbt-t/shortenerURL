@@ -59,7 +59,11 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 		return errHTTPConflict
 	}
 
-	_, err := db.NamedExec(`INSERT INTO items (user_id, original_url, short_url, create_at) VALUES (:user_id, :original_url, :short_url, :create_at)`,
+	_, err := db.NamedExec(
+		`
+	INSERT INTO items (user_id, original_url, short_url, create_at) 
+	VALUES (:user_id, :original_url, :short_url, :create_at)
+	`,
 		info,
 	)
 	if err != nil {
