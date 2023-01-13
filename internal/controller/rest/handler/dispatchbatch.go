@@ -45,15 +45,12 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	//result, err := json.Marshal(urlBatch)
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//w.Header().Set("Content-Type", "application/json")
+	result, err := json.Marshal(urlBatch)
+	if err != nil {
+		log.Println(err)
+	}
 
-	result := []byte(fmt.Sprintf("%v", urlBatch))
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
+	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(result); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
