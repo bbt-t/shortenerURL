@@ -41,7 +41,7 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 	for _, item := range urlBatch {
 		for _, v := range item {
 			delete(item, "original_url")
-			item["short_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
+			item["short_url"] = fmt.Sprintf("%s/%v", s.cfg.BaseURL, pkg.HashShortening([]byte(v)))
 		}
 	}
 

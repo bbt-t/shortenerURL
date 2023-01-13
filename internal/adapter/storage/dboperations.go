@@ -18,7 +18,11 @@ func createTable(db *sqlx.DB, schema string) {
 func getHashURL(db *sqlx.DB, k string) (string, error) {
 	var result string
 
-	err := db.Get(&result, "SELECT original_url FROM items WHERE short_url=$1", k)
+	err := db.Get(
+		&result,
+		"SELECT original_url FROM items WHERE short_url=$1",
+		k,
+	)
 	return result, err
 }
 
@@ -28,10 +32,7 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 		"create_at": time.Now(),
 	}
 	if _, err := db.NamedExec(
-		`
-			INSERT INTO users (user_id, create_at) 
-			VALUES (:user_id, :create_at)
-			`,
+		"INSERT INTO users (user_id, create_at) VALUES (:user_id, :create_at)",
 		info,
 	); err != nil {
 		log.Printf("ERRER : %v", err)
@@ -46,7 +47,12 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 		"create_at":    time.Now(),
 	}
 	var check bool
-	if err := db.Get(&check, "SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)", userID, v); err != nil && err != sql.ErrNoRows {
+	if err := db.Get(
+		&check,
+		"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
+		userID,
+		v,
+	); err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %v", err)
 	}
 	if check {
