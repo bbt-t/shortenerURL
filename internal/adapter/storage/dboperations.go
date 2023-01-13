@@ -29,7 +29,7 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 	}
 	if _, err := db.NamedExec(
 		`
-			INSERT INTO items (user_id, create_at) 
+			INSERT INTO users (user_id, create_at) 
 			VALUES (:user_id, :create_at)
 			`,
 		info,
@@ -41,11 +41,19 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 	info := map[string]interface{}{
 		"user_id":      userID,
-		"short_url":    k,
 		"original_url": v,
+		"short_url":    k,
+		"create_at":    time.Now(),
 	}
-	_, err := db.NamedExec(
-		`UPDATE items SET short_url=:short_url, original_url=:original_url WHERE user_id=:user_id`,
+	var check bool
+	if err := db.Get(&check, "SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)", userID, v); err != nil && err != sql.ErrNoRows {
+		log.Printf("error checking if row exists %v", err)
+	}
+	if check {
+		return errHTTPConflict
+	}
+
+	_, err := db.NamedExec(`INSERT INTO items (user_id, original_url, short_url, create_at) VALUES (:user_id, :original_url, :short_url, :create_at)`,
 		info,
 	)
 	if err != nil {
@@ -59,7 +67,7 @@ func checkUser(db *sqlx.DB, id uuid.UUID) (exists bool) {
 		Checking if the user exists in the DB.
 		param id: user_id
 	*/
-	err := db.QueryRow(fmt.Sprintf("SELECT exists (%s)", id)).Scan(&exists)
+	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", id)
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %v", err)
 	}
@@ -70,7 +78,10 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 	var urlArray []map[string]string
 
 	for k, v := range mapURL {
-		temp := map[string]string{"short_url": fmt.Sprintf("%s/%s", baseURL, k), "original_url": v}
+		temp := map[string]string{
+			"short_url":    fmt.Sprintf("%s/%s", baseURL, k),
+			"original_url": v,
+		}
 		urlArray = append(urlArray, temp)
 	}
 	return urlArray
