@@ -11,7 +11,7 @@ type ServerCfg struct {
 	ServerAddress string `env:"SERVER_ADDRESS"    envDefault:"127.0.0.1:8080"`
 	BaseURL       string `env:"BASE_URL"          envDefault:"http://127.0.0.1:8080"`
 	FilePath      string `env:"FILE_STORAGE_PATH"`
-	DBConnectURL  string `env:"DATABASE_DSN" envDefault:"host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"`
+	DBConnectURL  string `env:"DATABASE_DSN"` //envDefault:"host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"`
 	DBused        string
 }
 
