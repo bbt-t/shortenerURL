@@ -2,7 +2,9 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/bbt-t/shortenerURL/internal/controller/rest"
 	"github.com/gofrs/uuid"
 	"io"
 	"log"
@@ -47,16 +49,18 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 			shortURL := fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
 
 			if err := s.s.SaveShortURL(userID, shortURL, item["original_url"]); err != nil {
-				log.Print(err)
-				http.Error(
-					w,
-					fmt.Sprintf("Impossible unmarshal request : %s", err),
-					http.StatusInternalServerError,
-				)
-				return
+				log.Print(err) //http.StatusCreated
+				if errors.Is(err, rest.ErrHTTPConflict) {
+					http.Error(
+						w,
+						fmt.Sprintf("Impossible unmarshal request : %s", err),
+						http.StatusInternalServerError,
+					)
+					return
+				}
 			}
 
-			item["short_url"] = shortURL
+			item["short_url"] = fmt.Sprintf("%s/%s", s.cfg.BaseURL, shortURL)
 			delete(item, "original_url")
 		}
 	}
@@ -67,6 +71,7 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	if _, err := w.Write(result); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
