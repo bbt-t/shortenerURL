@@ -29,7 +29,7 @@ func NewFileDB(pathFile string) DatabaseRepository {
 	}
 }
 
-func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
+func (f *fileDB) save(userID uuid.UUID, shortURL, originalURL string, empty bool) error {
 	/*
 		Create/overwrite and write to a file.gob (gob-format).
 	*/
@@ -44,11 +44,11 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 		data[userID] = make(map[string]string)
 	}
 
-	_, ok := data[userID][k]
+	_, ok := data[userID][shortURL]
 	if ok {
 		return errHTTPConflict
 	}
-	data[userID][k] = v
+	data[userID][shortURL] = originalURL
 
 	saveTo, errOpen := os.OpenFile(f.PathToFile,
 		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
@@ -140,11 +140,11 @@ func (f *fileDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[stri
 	return result, nil
 }
 
-func (f *fileDB) SaveShortURL(userID uuid.UUID, k, v string) error {
+func (f *fileDB) SaveShortURL(userID uuid.UUID, originalURL, shortURL string) error {
 	/*
 		Calling a func to save info to a file.
 	*/
-	err := f.save(userID, k, v, false)
+	err := f.save(userID, originalURL, shortURL, false)
 	return err
 }
 

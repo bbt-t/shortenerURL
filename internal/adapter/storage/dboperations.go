@@ -15,13 +15,13 @@ func createTable(db *sqlx.DB, schema string) {
 	log.Println("SCHEMA CREATED")
 }
 
-func getHashURL(db *sqlx.DB, k string) (string, error) {
+func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
 	var result string
 
 	err := db.Get(
 		&result,
 		"SELECT original_url FROM items WHERE short_url=$1",
-		k,
+		shortURL,
 	)
 	return result, err
 }
@@ -39,19 +39,19 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 	}
 }
 
-func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
+func saveURL(db *sqlx.DB, userID uuid.UUID, originalURL, shortURL string) error {
+	var check bool
 	info := map[string]interface{}{
 		"user_id":      userID,
-		"original_url": v,
-		"short_url":    k,
-		"create_at":    time.Now(),
+		"original_url": originalURL,
+		"short_url":    shortURL,
 	}
-	var check bool
+
 	if err := db.Get(
 		&check,
 		"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
 		userID,
-		v,
+		originalURL,
 	); err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %v", err)
 	}
@@ -61,8 +61,8 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 
 	_, err := db.NamedExec(
 		`
-	INSERT INTO items (user_id, original_url, short_url, create_at) 
-	VALUES (:user_id, :original_url, :short_url, :create_at)
+	INSERT INTO items (user_id, original_url, short_url) 
+	VALUES (:user_id, :original_url, :short_url)
 	`,
 		info,
 	)
@@ -72,12 +72,12 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, k, v string) error {
 	return err
 }
 
-func checkUser(db *sqlx.DB, id uuid.UUID) (exists bool) {
+func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 	/*
 		Checking if the user exists in the DB.
 		param id: user_id
 	*/
-	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", id)
+	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", uid)
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %v", err)
 	}

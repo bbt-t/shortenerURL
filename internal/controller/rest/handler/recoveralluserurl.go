@@ -21,6 +21,7 @@ func (s ShortenerHandler) recoverAllOriginalURLByUser(w http.ResponseWriter, r *
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
+	fmt.Printf("IN HANDLER ALLURL : %v", allURL)
 
 	result, errJSON := json.Marshal(allURL)
 	if errJSON != nil {

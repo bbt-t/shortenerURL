@@ -40,7 +40,7 @@ func (s ShortenerHandler) composeNewShortURL(w http.ResponseWriter, r *http.Requ
 	temp := r.Context().Value("user_id")
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
 
-	if err := s.s.SaveShortURL(userID, hashedVal, originalURL); err != nil {
+	if err := s.s.SaveShortURL(userID, originalURL, hashedVal); err != nil {
 		log.Printf("ERROR : %s", err)
 	}
 

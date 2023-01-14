@@ -52,7 +52,7 @@ func (s ShortenerHandler) composeNewShortURLJson(w http.ResponseWriter, r *http.
 	temp := r.Context().Value("user_id")
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
 
-	errSaveURL := s.s.SaveShortURL(userID, hashedVal, originalURL)
+	errSaveURL := s.s.SaveShortURL(userID, originalURL, hashedVal)
 	resp.URL = fmt.Sprintf("%v/%v", s.cfg.BaseURL, hashedVal)
 
 	result, err := json.Marshal(resp)

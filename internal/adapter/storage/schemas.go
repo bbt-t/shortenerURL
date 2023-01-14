@@ -2,13 +2,15 @@ package storage
 
 const _tableItems = `
 CREATE TABLE IF NOT EXISTS users (
-	user_id UUID NOT NULL PRIMARY KEY,
-    create_at TIMESTAMP NOT NULL
+	user_id UUID PRIMARY KEY,
+    create_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 	user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
 	original_url VARCHAR(512),
 	short_url VARCHAR(32),
-    create_at TIMESTAMP NOT NULL
+    create_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted bool not null DEFAULT false
 );
 `

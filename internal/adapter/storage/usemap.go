@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -65,28 +66,34 @@ func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[strin
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
+
+	fmt.Println("allURL", allURL)
 	result := convertToArrayMap(allURL, baseURL)
 
 	return result, nil
 }
 
-func (m *mapDB) SaveShortURL(userID uuid.UUID, k, v string) error {
+func (m *mapDB) SaveShortURL(userID uuid.UUID, originalURL, shortURL string) error {
 	/*
 		Write info to the map by key - value.
 	*/
 	m.mutex.RLock()
-	_, ok := m.mapURL[userID][k]
+	_, ok := m.mapURL[userID][shortURL]
 	m.mutex.RUnlock()
 	if ok {
 		return errHTTPConflict
 	}
 	m.mutex.Lock()
-	m.mapURL[userID][k] = v
+	m.mapURL[userID][shortURL] = originalURL
 	m.mutex.Unlock()
 	return nil
 }
 
 func (m *mapDB) PingDB() error {
 	log.Println("MAP IS READY!")
+	return nil
+}
+
+func (m *mapDB) DelURLArray(inputURLJSON []byte, UID string) error {
 	return nil
 }
