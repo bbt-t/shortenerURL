@@ -78,11 +78,11 @@ func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map
 	return urlArray, nil
 }
 
-func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, originalURL, shortURL string) error {
+func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adding info to the DB.
 	*/
-	err := saveURL(d.db, userID, originalURL, shortURL)
+	err := saveURL(d.db, userID, shortURL, originalURL)
 	return err
 }
 

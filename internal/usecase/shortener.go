@@ -6,7 +6,7 @@ type DatabaseRepository interface {
 	NewUser(userID uuid.UUID)
 	GetOriginalURL(shortURL string) (string, error)
 	GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error)
-	SaveShortURL(userID uuid.UUID, hashURL, originalURL string) error
+	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
 }
 
@@ -34,8 +34,8 @@ func (s ShortenerService) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([
 	return result, err
 }
 
-func (s ShortenerService) SaveShortURL(userID uuid.UUID, hashURL, originalURL string) error {
-	return s.repo.SaveShortURL(userID, hashURL, originalURL)
+func (s ShortenerService) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
+	return s.repo.SaveShortURL(userID, shortURL, originalURL)
 }
 
 func (s ShortenerService) PingDB() error {
