@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/bbt-t/shortenerURL/pkg"
+
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -99,44 +101,20 @@ func (d *sqlDatabase) PingDB() error {
 	return err
 }
 
-//func (d *sqlDatabase) DelURLArray(inputURLJSON []byte, UID string) error {
-//	var idu int64
-//
-//	ctx := context.Background()
-//	vURL := strings.ReplaceAll(string(inputURLJSON), " ", "")
-//	vURL = strings.ReplaceAll(strings.ReplaceAll(vURL, "[", ""), "]", "")
-//
-//	valURL := strings.Split(strings.ReplaceAll(vURL, "\"", ""), ",")
-//	fmt.Println("Split url short ", valURL)
-//	if len(valURL) > 20 {
-//		// batch
-//		batch := &pgx.Batch{}
-//		for _, v := range valURL {
-//			batch.Queue("UPDATE items SET deleted=true "+
-//				"where url_id=(select id from url where url_short=$1) and user_id=$2", v, idu)
-//		}
-//		br := m.db.SendBatch(context.Background(), batch)
-//
-//		ct, err := br.Exec()
-//		if err != nil {
-//			fmt.Println("Not Updated users_url(user_id,url_id) ", err)
-//		}
-//		if ct.RowsAffected() != 1 {
-//			fmt.Println("ct.RowsAffected()", ct.RowsAffected())
-//		}
-//		br.Close()
-//
-//	} else {
-//		// обновляем одним запросом, списком
-//		vURL := strings.ReplaceAll(vURL, "\"", "'")
-//		query := "UPDATE users_url set deleted=true where " +
-//			"url_id in (select id from url where url_short in (" + vURL +
-//			") ) and user_id=$1"
-//		fmt.Println("query =", query)
-//		if _, err := m.db.Exec(ctx, query, idu); err != nil {
-//			fmt.Println("Not Updated users_url(user_id,url_id) ", err)
-//			return err
-//		}
-//	}
-//	return nil
-//}
+func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
+	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+
+	for _, v := range inpURLs {
+		_, err := d.db.NamedExec(`UPDATE items SET removed=:removed WHERE id=:id AND user_id=:user_id`,
+			map[string]interface{}{
+				"removed": true,
+				"id":      v,
+				"user_id": uid,
+			})
+		if err != nil {
+			return errDBUnknownID
+		}
+	}
+	return nil
+
+}

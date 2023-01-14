@@ -8,6 +8,7 @@ type DatabaseRepository interface {
 	GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error)
 	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
+	DelURLArray(inpJSON []byte, userID string) error
 }
 
 type ShortenerService struct {
@@ -40,4 +41,8 @@ func (s ShortenerService) SaveShortURL(userID uuid.UUID, shortURL, originalURL s
 
 func (s ShortenerService) PingDB() error {
 	return s.repo.PingDB()
+}
+
+func (s ShortenerService) DelURLArray(inpJSON []byte, userID string) error {
+	return s.repo.DelURLArray(inpJSON, userID)
 }

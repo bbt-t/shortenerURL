@@ -167,3 +167,7 @@ func (f *fileDB) PingDB() error {
 	}
 	return err
 }
+
+func (f *fileDB) DelURLArray(inpJSON []byte, userID string) error {
+	return nil
+}
