@@ -1,14 +1,13 @@
 package storage
 
 import (
-	"fmt"
 	"log"
 	"sync"
 
 	"github.com/gofrs/uuid"
 )
 
-type mapDB struct {
+type mapDBPlug struct {
 	/*
 		Simple DB stub.
 	*/
@@ -16,17 +15,17 @@ type mapDB struct {
 	mutex  *sync.RWMutex
 }
 
-func NewMapDB() DatabaseRepository {
+func NewMapDBPlug() DatabaseRepository {
 	/*
 		return: object with an empty map to write data.
 	*/
-	return &mapDB{
+	return &mapDBPlug{
 		mapURL: make(map[uuid.UUID]map[string]string),
 		mutex:  new(sync.RWMutex),
 	}
 }
 
-func (m *mapDB) NewUser(userID uuid.UUID) {
+func (m *mapDBPlug) NewUser(userID uuid.UUID) {
 	defer m.mutex.Unlock()
 	m.mutex.Lock()
 	if nil == m.mapURL[userID] {
@@ -34,7 +33,7 @@ func (m *mapDB) NewUser(userID uuid.UUID) {
 	}
 }
 
-func (m *mapDB) GetOriginalURL(k string) (string, error) {
+func (m *mapDBPlug) GetOriginalURL(k string) (string, error) {
 	/*
 		get info from the map by key.
 	*/
@@ -54,7 +53,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+func (m *mapDBPlug) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	/*
 		Take all saved urls.
 	*/
@@ -66,34 +65,28 @@ func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[strin
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
-
-	fmt.Println("allURL", allURL)
 	result := convertToArrayMap(allURL, baseURL)
 
 	return result, nil
 }
 
-func (m *mapDB) SaveShortURL(userID uuid.UUID, originalURL, shortURL string) error {
+func (m *mapDBPlug) SaveShortURL(userID uuid.UUID, k, v string) error {
 	/*
 		Write info to the map by key - value.
 	*/
 	m.mutex.RLock()
-	_, ok := m.mapURL[userID][shortURL]
+	_, ok := m.mapURL[userID][k]
 	m.mutex.RUnlock()
 	if ok {
 		return errHTTPConflict
 	}
 	m.mutex.Lock()
-	m.mapURL[userID][shortURL] = originalURL
+	m.mapURL[userID][k] = v
 	m.mutex.Unlock()
 	return nil
 }
 
-func (m *mapDB) PingDB() error {
+func (m *mapDBPlug) PingDB() error {
 	log.Println("MAP IS READY!")
-	return nil
-}
-
-func (m *mapDB) DelURLArray(inputURLJSON []byte, UID string) error {
 	return nil
 }

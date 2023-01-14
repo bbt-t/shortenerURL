@@ -27,7 +27,7 @@ func Run(cfg *config.ServerCfg) {
 	case "file":
 		repo = storage.NewFileDB(cfg.FilePath)
 	default:
-		repo = storage.NewMapDB()
+		repo = storage.NewMapDBPlug()
 	}
 	if err := repo.PingDB(); err != nil {
 		log.Fatal(err)

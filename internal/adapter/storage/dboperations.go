@@ -39,7 +39,7 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 	}
 }
 
-func saveURL(db *sqlx.DB, userID uuid.UUID, originalURL, shortURL string) error {
+func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error {
 	var check bool
 	info := map[string]interface{}{
 		"user_id":      userID,
