@@ -116,5 +116,9 @@ func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
 		}
 	}
 	return nil
+}
 
+func (d *sqlDatabase) saveURLArray(uid uuid.UUID, inpURL []map[string]string) error {
+	err := saveURLBatch(d.db, uid, inpURL)
+	return err
 }

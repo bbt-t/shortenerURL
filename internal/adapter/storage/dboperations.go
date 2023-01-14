@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bbt-t/shortenerURL/pkg"
 	"log"
 	"time"
 
@@ -95,4 +96,26 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 		urlArray = append(urlArray, temp)
 	}
 	return urlArray
+}
+
+func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []map[string]string) error {
+	for _, item := range urlBatch {
+		for _, v := range item {
+			delete(item, "original_url")
+			item["short_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
+
+			_, err := db.NamedExec(fmt.Sprintf(
+				"INSERT INTO items (%s, original_url, short_url) VALUES (:user_id, :original_url, :short_url)",
+				uid),
+				item,
+			)
+
+			if err != nil {
+				log.Printf("ERRER : %v", err)
+				return err
+			}
+		}
+	}
+	log.Println("DONE")
+	return nil
 }

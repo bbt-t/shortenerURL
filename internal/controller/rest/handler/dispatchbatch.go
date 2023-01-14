@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
@@ -38,10 +39,25 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	temp := r.Context().Value("user_id")
+	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
+
 	for _, item := range urlBatch {
 		for _, v := range item {
+			shortURL := fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
+
+			if err := s.s.SaveShortURL(userID, shortURL, item["original_url"]); err != nil {
+				log.Print(err)
+				http.Error(
+					w,
+					fmt.Sprintf("Impossible unmarshal request : %s", err),
+					http.StatusInternalServerError,
+				)
+				return
+			}
+
+			item["short_url"] = shortURL
 			delete(item, "original_url")
-			item["short_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
 		}
 	}
 
