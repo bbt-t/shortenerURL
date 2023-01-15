@@ -101,8 +101,8 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 
 func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.UrlBatchInp) error {
 
-	for i, _ := range urlBatch {
-		temp := strings.Split(urlBatch[i].ShortURL, "/")
+	for i, item := range urlBatch {
+		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 
 		urlBatch[i].UserID = uid
