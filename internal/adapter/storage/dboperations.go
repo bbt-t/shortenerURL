@@ -99,7 +99,7 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 	return urlArray
 }
 
-func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.UrlBatchInp) error {
+func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
 
 	for i, item := range urlBatch {
 		temp := strings.Split(item.ShortURL, "/")

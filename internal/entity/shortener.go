@@ -2,13 +2,13 @@ package entity
 
 import "github.com/gofrs/uuid"
 
-type UrlBatch struct {
+type URLBatch struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"-"`
 	ShortURL      string `json:"short_url"`
 }
 
-type UrlBatchInp struct {
+type URLBatchInp struct {
 	UserID        uuid.UUID `db:"user_id" json:"-"`
 	ID            uuid.UUID `db:"id" json:"-"`
 	CorrelationID string    `json:"correlation_id"`

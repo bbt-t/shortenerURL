@@ -17,8 +17,8 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		Accepts multiple URLs in the request body to shorten,
 		changes "original_url" to "short_url".
 	*/
-	var urlBatchForSave []entity.UrlBatchInp
-	var urlBatchForSend []entity.UrlBatch
+	var urlBatchForSave []entity.URLBatchInp
+	var urlBatchForSend []entity.URLBatch
 
 	defer r.Body.Close()
 
@@ -48,7 +48,7 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
-	copySt := append(make([]entity.UrlBatchInp, 0, len(urlBatchForSave)), urlBatchForSave...)
+	copySt := append(make([]entity.URLBatchInp, 0, len(urlBatchForSave)), urlBatchForSave...)
 	_ = s.s.SaveURLArray(userID, copySt) // НУЖНО СДЕЛАТЬ КОПИЮ
 
 	temp, _ := json.Marshal(urlBatchForSave)

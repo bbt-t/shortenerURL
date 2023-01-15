@@ -119,7 +119,7 @@ func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
 	return nil
 }
 
-func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.UrlBatchInp) error {
+func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
 	err := saveURLBatch(d.db, uid, inpURL)
 	return err
 }

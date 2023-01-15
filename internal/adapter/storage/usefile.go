@@ -174,6 +174,6 @@ func (f *fileDB) DelURLArray(inpJSON []byte, userID string) error {
 	return nil
 }
 
-func (f *fileDB) SaveURLArray(uid uuid.UUID, inpURL []entity.UrlBatchInp) error {
+func (f *fileDB) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
 	return nil
 }

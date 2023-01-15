@@ -97,6 +97,6 @@ func (m *mapDB) DelURLArray(inpJSON []byte, userID string) error {
 	return nil
 }
 
-func (m *mapDB) SaveURLArray(uid uuid.UUID, inpURL []entity.UrlBatchInp) error {
+func (m *mapDB) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
 	return nil
 }
