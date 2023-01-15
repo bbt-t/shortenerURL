@@ -104,9 +104,7 @@ func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) err
 	for i, item := range urlBatch {
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
-
 		urlBatch[i].UserID = uid
-
 		//uuidURL, _ := uuid.FromString(fmt.Sprintf("%v", urlBatch[i].CorrelationID))
 		//urlBatch[i].ID = uuidURL
 	}
