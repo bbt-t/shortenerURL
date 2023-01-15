@@ -2,14 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/internal/controller/rest"
 	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
 
+	"github.com/bbt-t/shortenerURL/internal/entity"
 	"github.com/bbt-t/shortenerURL/pkg"
 )
 
@@ -18,7 +17,8 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		Accepts multiple URLs in the request body to shorten,
 		changes "original_url" to "short_url".
 	*/
-	var urlBatch []map[string]string
+	var urlBatchForSave []entity.UrlBatchInp
+	var urlBatchForSend []entity.UrlBatch
 
 	defer r.Body.Close()
 
@@ -31,7 +31,7 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		)
 		return
 	}
-	if err := json.Unmarshal(payload, &urlBatch); err != nil {
+	if err := json.Unmarshal(payload, &urlBatchForSave); err != nil {
 		log.Print(err)
 		http.Error(
 			w,
@@ -41,31 +41,20 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	temp := r.Context().Value("user_id")
-	userID, _ := uuid.FromString(fmt.Sprintf("%v", temp))
-
-	for _, item := range urlBatch {
-		for _, v := range item {
-			shortURL := fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
-
-			if err := s.s.SaveShortURL(userID, shortURL, item["original_url"]); err != nil {
-				log.Print(err) //http.StatusCreated
-				if errors.Is(err, rest.ErrHTTPConflict) {
-					http.Error(
-						w,
-						fmt.Sprintf("Impossible unmarshal request : %s", err),
-						http.StatusInternalServerError,
-					)
-					return
-				}
-			}
-
-			item["short_url"] = fmt.Sprintf("%s/%s", s.cfg.BaseURL, shortURL)
-			delete(item, "original_url")
-		}
+	for i, item := range urlBatchForSave {
+		shortURL := fmt.Sprintf("%v", pkg.HashShortening([]byte(item.OriginalURL)))
+		urlBatchForSave[i].ShortURL = fmt.Sprintf("%s/%s", s.cfg.BaseURL, shortURL)
 	}
 
-	result, err := json.Marshal(urlBatch)
+	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
+
+	copySt := append(make([]entity.UrlBatchInp, 0, len(urlBatchForSave)), urlBatchForSave...)
+	_ = s.s.SaveURLArray(userID, copySt) // НУЖНО СДЕЛАТЬ КОПИЮ
+
+	temp, _ := json.Marshal(urlBatchForSave)
+	_ = json.Unmarshal(temp, &urlBatchForSend)
+
+	result, err := json.Marshal(urlBatchForSend)
 	if err != nil {
 		log.Println(err)
 	}

@@ -4,6 +4,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/bbt-t/shortenerURL/internal/entity"
+
 	"github.com/gofrs/uuid"
 )
 
@@ -92,5 +94,9 @@ func (m *mapDB) PingDB() error {
 }
 
 func (m *mapDB) DelURLArray(inpJSON []byte, userID string) error {
+	return nil
+}
+
+func (m *mapDB) SaveURLArray(uid uuid.UUID, inpURL []entity.UrlBatchInp) error {
 	return nil
 }

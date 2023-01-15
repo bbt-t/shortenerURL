@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/gofrs/uuid"
+import (
+	"github.com/bbt-t/shortenerURL/internal/entity"
+	"github.com/gofrs/uuid"
+)
 
 type DatabaseRepository interface {
 	/*
@@ -12,4 +15,5 @@ type DatabaseRepository interface {
 	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
 	DelURLArray(inpJSON []byte, userID string) error
+	SaveURLArray(uid uuid.UUID, inpURL []entity.UrlBatchInp) error
 }

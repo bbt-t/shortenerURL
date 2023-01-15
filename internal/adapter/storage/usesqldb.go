@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/bbt-t/shortenerURL/internal/entity"
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
@@ -14,11 +15,6 @@ import (
 
 type sqlDatabase struct {
 	db *sqlx.DB
-}
-
-type URLs struct {
-	OriginalURL string `db:"original_url" json:"original_url"`
-	ShortURL    string `db:"short_url" json:"short_url"`
 }
 
 func NewSQLDatabase(dsn string) DatabaseRepository {
@@ -60,13 +56,18 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 }
 
 func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
-	var resultStructs []URLs
+	var resultStructs []entity.URLs
 	var urlArray []map[string]string
 
 	err := d.db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		return nil, err
 	}
+	if len(resultStructs) == 0 {
+		return nil, errDBEmpty
+	}
+
 	for _, item := range resultStructs {
 		temp := make(map[string]string)
 
@@ -118,7 +119,7 @@ func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
 	return nil
 }
 
-func (d *sqlDatabase) saveURLArray(uid uuid.UUID, inpURL []map[string]string) error {
+func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.UrlBatchInp) error {
 	err := saveURLBatch(d.db, uid, inpURL)
 	return err
 }

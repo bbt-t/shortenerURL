@@ -3,8 +3,9 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/pkg"
+	"github.com/bbt-t/shortenerURL/internal/entity"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -98,24 +99,25 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 	return urlArray
 }
 
-func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []map[string]string) error {
-	for _, item := range urlBatch {
-		for _, v := range item {
-			delete(item, "original_url")
-			item["short_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
+func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.UrlBatchInp) error {
 
-			_, err := db.NamedExec(fmt.Sprintf(
-				"INSERT INTO items (%s, original_url, short_url) VALUES (:user_id, :original_url, :short_url)",
-				uid),
-				item,
-			)
+	for i, _ := range urlBatch {
+		temp := strings.Split(urlBatch[i].ShortURL, "/")
+		urlBatch[i].ShortURL = temp[len(temp)-1]
 
-			if err != nil {
-				log.Printf("ERRER : %v", err)
-				return err
-			}
+		urlBatch[i].UserID = uid
+
+		//uuidURL, _ := uuid.FromString(fmt.Sprintf("%v", urlBatch[i].CorrelationID))
+		//urlBatch[i].ID = uuidURL
+	}
+
+	query := "INSERT INTO items (user_id, original_url, short_url) VALUES (:user_id, :original_url, :short_url)"
+
+	for _, chunk := range urlBatch {
+		if _, err := db.NamedExec(query, &chunk); err != nil {
+			fmt.Println(err)
+			return err
 		}
 	}
-	log.Println("DONE")
 	return nil
 }
