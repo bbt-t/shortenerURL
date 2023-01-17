@@ -87,7 +87,7 @@ func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 }
 
 func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
-	var urlArray []map[string]string
+	urlArray := make([]map[string]string, len(mapURL))
 
 	for k, v := range mapURL {
 		temp := map[string]string{
