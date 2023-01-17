@@ -3,10 +3,11 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/internal/entity"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -100,7 +101,6 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 }
 
 func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
-
 	for i, item := range urlBatch {
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
@@ -108,7 +108,6 @@ func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) err
 	}
 
 	query := "INSERT INTO items (user_id, original_url, short_url) VALUES (:user_id, :original_url, :short_url)"
-
 	for _, chunk := range urlBatch {
 		if _, err := db.NamedExec(query, &chunk); err != nil {
 			fmt.Println(err)

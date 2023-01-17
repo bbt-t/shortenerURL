@@ -3,13 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
 	"github.com/bbt-t/shortenerURL/pkg"
+
+	"github.com/gofrs/uuid"
 )
 
 func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +50,7 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
 	copySt := append(make([]entity.URLBatchInp, 0, len(urlBatchForSave)), urlBatchForSave...)
-	_ = s.s.SaveURLArray(userID, copySt) // НУЖНО СДЕЛАТЬ КОПИЮ
+	_ = s.s.SaveURLArray(userID, copySt) // must do deepcopy (!)
 
 	temp, _ := json.Marshal(urlBatchForSave)
 	_ = json.Unmarshal(temp, &urlBatchForSend)
