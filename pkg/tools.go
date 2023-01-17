@@ -58,6 +58,9 @@ func AssertEqualPassword(password, hash string) bool {
 }
 
 func ConvertStrToSlice(strToChange string) []string {
+	/*
+		[ "a", "b", "c", "d", ...] -> slice [a, b, c, d, ...]
+	*/
 	temp := strings.ReplaceAll(strToChange, " ", "")
 	temp = strings.ReplaceAll(strings.ReplaceAll(temp, "[", ""), "]", "")
 

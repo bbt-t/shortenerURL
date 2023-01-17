@@ -37,6 +37,9 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 }
 
 func (d *sqlDatabase) NewUser(userID uuid.UUID) {
+	/*
+		Adds new user.
+	*/
 	if checkUser(d.db, userID) {
 		return
 	}
@@ -56,6 +59,9 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 }
 
 func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+	/*
+		Gets all pairs "original" - "short" urls previously saved by the user.
+	*/
 	var resultStructs []entity.URLs
 
 	err := d.db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)

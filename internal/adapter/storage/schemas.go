@@ -14,4 +14,5 @@ CREATE TABLE IF NOT EXISTS items (
     create_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted bool not null DEFAULT false
 );
+CREATE INDEX IF NOT EXISTS idx_user_id ON users (user_id);
 `

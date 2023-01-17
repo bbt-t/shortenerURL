@@ -14,11 +14,19 @@ import (
 )
 
 func createTable(db *sqlx.DB, schema string) {
+	/*
+		Executes SQL commands at startup.
+		param schema: commands
+	*/
 	db.MustExec(schema /* SQL commands */)
 	log.Println("SCHEMA CREATED")
 }
 
 func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
+	/*
+		Makes a request (selection of the original url by short) to the DB.
+		return: original url or error
+	*/
 	var result string
 
 	err := db.Get(
@@ -30,6 +38,10 @@ func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
 }
 
 func addNewUser(db *sqlx.DB, userID uuid.UUID) {
+	/*
+		Adds a new user to the DB.
+		param userID: UUID issued when receiving the cookie (middleware)
+	*/
 	info := map[string]interface{}{
 		"user_id":   userID,
 		"create_at": time.Now(),
@@ -43,6 +55,9 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 }
 
 func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error {
+	/*
+		Adds short url to DB.
+	*/
 	var check bool
 	info := map[string]interface{}{
 		"user_id":      userID,
@@ -78,7 +93,7 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 	/*
 		Checking if the user exists in the DB.
-		param id: user_id
+		param uid: UUID issued when receiving the cookie (middleware)
 	*/
 	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", uid)
 	if err != nil && err != sql.ErrNoRows {
