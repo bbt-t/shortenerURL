@@ -57,7 +57,6 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 
 func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	var resultStructs []entity.URLs
-	//var urlArray []map[string]string
 
 	err := d.db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
 	if err != nil {
@@ -70,7 +69,7 @@ func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map
 	urlArray := make([]map[string]string, len(resultStructs))
 
 	for _, item := range resultStructs {
-		temp := make(map[string]string)
+		temp := make(map[string]string, 2)
 
 		data, _ := json.Marshal(item)
 		_ = json.Unmarshal(data, &temp)
