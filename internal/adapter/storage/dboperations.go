@@ -88,7 +88,6 @@ func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 
 func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
 	var urlArray []map[string]string
-	//urlArray := make([]map[string]string, len(mapURL))
 
 	for k, v := range mapURL {
 		temp := map[string]string{
@@ -106,8 +105,6 @@ func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) err
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 		urlBatch[i].UserID = uid
-		//uuidURL, _ := uuid.FromString(fmt.Sprintf("%v", urlBatch[i].CorrelationID))
-		//urlBatch[i].ID = uuidURL
 	}
 
 	query := "INSERT INTO items (user_id, original_url, short_url) VALUES (:user_id, :original_url, :short_url)"
