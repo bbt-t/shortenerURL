@@ -67,7 +67,7 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	encoder := gob.NewEncoder(saveTo)
 	err = encoder.Encode(data)
 	if err != nil {
-		log.Printf("Cannot save to -> %v", f.PathToFile)
+		log.Printf("Cannot save to -> %+v", f.PathToFile)
 		return err
 	}
 	return nil
@@ -170,10 +170,10 @@ func (f *fileDB) PingDB() error {
 	return err
 }
 
-func (f *fileDB) DelURLArray(inpJSON []byte, userID string) error {
+func (f *fileDB) DelURLArray(_ []byte, _ string) error {
 	return nil
 }
 
-func (f *fileDB) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+func (f *fileDB) SaveURLArray(_ uuid.UUID, _ []entity.URLBatchInp) error {
 	return nil
 }

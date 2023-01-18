@@ -93,10 +93,10 @@ func (m *mapDB) PingDB() error {
 	return nil
 }
 
-func (m *mapDB) DelURLArray(inpJSON []byte, userID string) error {
+func (m *mapDB) DelURLArray(_ []byte, _ string) error {
 	return nil
 }
 
-func (m *mapDB) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+func (m *mapDB) SaveURLArray(_ uuid.UUID, _ []entity.URLBatchInp) error {
 	return nil
 }

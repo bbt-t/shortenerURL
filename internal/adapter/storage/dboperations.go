@@ -50,7 +50,7 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 		"INSERT INTO users (user_id, create_at) VALUES (:user_id, :create_at)",
 		info,
 	); err != nil {
-		log.Printf("ERRER : %v", err)
+		log.Printf("ERRER : %+v", err)
 	}
 }
 
@@ -71,7 +71,7 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 		userID,
 		originalURL,
 	); err != nil && err != sql.ErrNoRows {
-		log.Printf("error checking if row exists %v", err)
+		log.Printf("error checking if row exists %+v", err)
 	}
 	if check {
 		return errHTTPConflict
@@ -85,7 +85,7 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 		info,
 	)
 	if err != nil {
-		log.Printf("ERRER : %v", err)
+		log.Printf("ERRER : %+v", err)
 	}
 	return err
 }
@@ -97,7 +97,7 @@ func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 	*/
 	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", uid)
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("error checking if row exists %v", err)
+		log.Printf("error checking if row exists %+v", err)
 	}
 	return exists
 }

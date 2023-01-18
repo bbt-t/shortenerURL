@@ -1,6 +1,8 @@
 package pkg
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestHashShortening(t *testing.T) {
 	type args struct {
@@ -102,4 +104,51 @@ func TestHostOnly(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConvertStrToSlice(t *testing.T) {
+	type args struct {
+		inputStr string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "#1",
+			args: args{inputStr: `[ "a", "b", "c", "d" ]`},
+			want: []string{"a", "b", "c", "d"},
+		},
+		{
+			name: "#2",
+			args: args{inputStr: `["http","://","localhost",":8080"]`},
+			want: []string{"http", "://", "localhost", ":8080"},
+		},
+		{
+			name: "#3",
+			args: args{inputStr: `["192","168.",   "0.1",":5001   "]`},
+			want: []string{"192", "168.", "0.1", ":5001"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			if got := ConvertStrToSlice(tt.args.inputStr); !testEq(got, tt.want) {
+				t.Errorf("ConvertStrToSlice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func testEq(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
