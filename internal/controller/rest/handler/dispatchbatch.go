@@ -7,7 +7,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/bbt-t/shortenerURL/internal/entity"
 	"github.com/bbt-t/shortenerURL/pkg"
+
+	"github.com/gofrs/uuid"
 )
 
 func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +18,8 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		Accepts multiple URLs in the request body to shorten,
 		changes "original_url" to "short_url".
 	*/
-	var urlBatch []map[string]string
+	var urlBatchForSave []entity.URLBatchInp
+	var urlBatchForSend []entity.URLBatch
 
 	defer r.Body.Close()
 
@@ -28,7 +32,7 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		)
 		return
 	}
-	if err := json.Unmarshal(payload, &urlBatch); err != nil {
+	if err := json.Unmarshal(payload, &urlBatchForSave); err != nil {
 		log.Print(err)
 		http.Error(
 			w,
@@ -38,19 +42,26 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	for _, item := range urlBatch {
-		for _, v := range item {
-			delete(item, "original_url")
-			item["short_url"] = fmt.Sprintf("%v", pkg.HashShortening([]byte(v)))
-		}
+	for i, item := range urlBatchForSave {
+		shortURL := fmt.Sprintf("%v", pkg.HashShortening([]byte(item.OriginalURL)))
+		urlBatchForSave[i].ShortURL = fmt.Sprintf("%s/%s", s.cfg.BaseURL, shortURL)
 	}
 
-	result, err := json.Marshal(urlBatch)
+	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
+
+	copySt := append(make([]entity.URLBatchInp, 0, len(urlBatchForSave)), urlBatchForSave...)
+	_ = s.s.SaveURLArray(userID, copySt) // must do deepcopy (!)
+
+	temp, _ := json.Marshal(urlBatchForSave)
+	_ = json.Unmarshal(temp, &urlBatchForSend)
+
+	result, err := json.Marshal(urlBatchForSend)
 	if err != nil {
 		log.Println(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	if _, err := w.Write(result); err != nil {
 		log.Printf("ERROR : %s", err)
 	}

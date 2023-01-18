@@ -7,6 +7,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/bbt-t/shortenerURL/internal/entity"
+
 	"github.com/gofrs/uuid"
 )
 
@@ -65,7 +67,7 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	encoder := gob.NewEncoder(saveTo)
 	err = encoder.Encode(data)
 	if err != nil {
-		log.Printf("Cannot save to -> %v", f.PathToFile)
+		log.Printf("Cannot save to -> %+v", f.PathToFile)
 		return err
 	}
 	return nil
@@ -127,7 +129,7 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (f *fileDB) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
+func (f *fileDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	defer f.mutex.RUnlock()
 
 	fileMap, _ := f.get()
@@ -136,7 +138,7 @@ func (f *fileDB) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
-	result := convertToArrayMap(allURL)
+	result := convertToArrayMap(allURL, baseURL)
 	return result, nil
 }
 
@@ -166,4 +168,12 @@ func (f *fileDB) PingDB() error {
 		log.Println("FILE IS READY!")
 	}
 	return err
+}
+
+func (f *fileDB) DelURLArray(_ []byte, _ string) error {
+	return nil
+}
+
+func (f *fileDB) SaveURLArray(_ uuid.UUID, _ []entity.URLBatchInp) error {
+	return nil
 }

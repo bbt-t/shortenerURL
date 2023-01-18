@@ -1,13 +1,18 @@
 package usecase
 
-import "github.com/gofrs/uuid"
+import (
+	"github.com/bbt-t/shortenerURL/internal/entity"
+	"github.com/gofrs/uuid"
+)
 
 type DatabaseRepository interface {
 	NewUser(userID uuid.UUID)
 	GetOriginalURL(shortURL string) (string, error)
-	GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error)
-	SaveShortURL(userID uuid.UUID, hashURL, originalURL string) error
+	GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error)
+	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
+	DelURLArray(inpJSON []byte, userID string) error
+	SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error
 }
 
 type ShortenerService struct {
@@ -29,15 +34,23 @@ func (s ShortenerService) GetOriginalURL(shortURL string) (string, error) {
 	return result, err
 }
 
-func (s ShortenerService) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
-	result, err := s.repo.GetURLArrayByUser(userID)
+func (s ShortenerService) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+	result, err := s.repo.GetURLArrayByUser(userID, baseURL)
 	return result, err
 }
 
-func (s ShortenerService) SaveShortURL(userID uuid.UUID, hashURL, originalURL string) error {
-	return s.repo.SaveShortURL(userID, hashURL, originalURL)
+func (s ShortenerService) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
+	return s.repo.SaveShortURL(userID, shortURL, originalURL)
 }
 
 func (s ShortenerService) PingDB() error {
 	return s.repo.PingDB()
+}
+
+func (s ShortenerService) DelURLArray(inpJSON []byte, userID string) error {
+	return s.repo.DelURLArray(inpJSON, userID)
+}
+
+func (s ShortenerService) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+	return s.repo.SaveURLArray(uid, inpURL)
 }

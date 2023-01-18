@@ -56,3 +56,15 @@ func AssertEqualPassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return errors.Is(err, nil)
 }
+
+func ConvertStrToSlice(strToChange string) []string {
+	/*
+		[ "a", "b", "c", "d", ...] -> slice [a, b, c, d, ...]
+	*/
+	temp := strings.ReplaceAll(strToChange, " ", "")
+	temp = strings.ReplaceAll(strings.ReplaceAll(temp, "[", ""), "]", "")
+
+	result := strings.Split(strings.ReplaceAll(temp, "\"", ""), ",")
+
+	return result
+}

@@ -2,7 +2,11 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+
+	"github.com/bbt-t/shortenerURL/internal/entity"
+	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -11,11 +15,6 @@ import (
 
 type sqlDatabase struct {
 	db *sqlx.DB
-}
-
-type User struct {
-	HashURL     string `db:"short_url"`
-	OriginalURL string `db:"original_url"`
 }
 
 func NewSQLDatabase(dsn string) DatabaseRepository {
@@ -38,6 +37,9 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 }
 
 func (d *sqlDatabase) NewUser(userID uuid.UUID) {
+	/*
+		Adds new user.
+	*/
 	if checkUser(d.db, userID) {
 		return
 	}
@@ -49,47 +51,47 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 		Search for info by ID.
 		param k: id by which we search in the DB
 	*/
-	result, err := getHashURL(d.db, k /* id (hashed url) */)
+	result, err := getOriginalURL(d.db, k /* id (hashed url) */)
 	if err != nil {
 		return "", err
 	}
 	return result, nil
 }
 
-func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID) ([]map[string]string, error) {
-	userMap := User{}
-	allURL := map[string]string{}
+func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+	/*
+		Gets all pairs "original" - "short" urls previously saved by the user.
+	*/
+	var resultStructs []entity.URLs
 
-	if err := d.db.Get(
-		&userMap,
-		"SELECT short_url, original_url FROM items WHERE user_id=$1",
-		userID,
-	); err != nil {
+	err := d.db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
+	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
-
-	//inMap := structs.Map(result)
-
-	data, errMJson := json.Marshal(userMap)
-	if errMJson != nil {
-		log.Println(errMJson)
-		return nil, errMJson
+	if len(resultStructs) == 0 {
+		return nil, errDBEmpty
 	}
-	if errUJson := json.Unmarshal(data, &allURL); errUJson != nil {
-		log.Println(errUJson)
-		return nil, errUJson
+	urlArray := make([]map[string]string, len(resultStructs))
+
+	for _, item := range resultStructs {
+		temp := make(map[string]string, 2)
+
+		data, _ := json.Marshal(item)
+		_ = json.Unmarshal(data, &temp)
+
+		temp["short_url"] = fmt.Sprintf("%s/%s", baseURL, temp["short_url"])
+		urlArray = append(urlArray, temp)
 	}
 
-	result := convertToArrayMap(allURL)
-
-	return result, nil
+	return urlArray, nil
 }
 
-func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, k, v string) error {
+func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adding info to the DB.
 	*/
-	err := saveURL(d.db, userID, k /* hashed url */, v /* original url */)
+	err := saveURL(d.db, userID, shortURL, originalURL)
 	return err
 }
 
@@ -103,5 +105,27 @@ func (d *sqlDatabase) PingDB() error {
 	} else {
 		log.Println("Postgres is READY!")
 	}
+	return err
+}
+
+func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
+	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+
+	for _, v := range inpURLs {
+		_, err := d.db.NamedExec(`UPDATE items SET removed=:removed WHERE id=:id AND user_id=:user_id`,
+			map[string]interface{}{
+				"removed": true,
+				"id":      v,
+				"user_id": uid,
+			})
+		if err != nil {
+			return errDBUnknownID
+		}
+	}
+	return nil
+}
+
+func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+	err := saveURLBatch(d.db, uid, inpURL)
 	return err
 }
