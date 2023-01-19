@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -18,12 +17,7 @@ func (s ShortenerHandler) recoverOriginalURL(w http.ResponseWriter, r *http.Requ
 	*/
 	if originalURL, err := s.s.GetOriginalURL(chi.URLParam(r, "id")); err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			log.Printf("ERROR : %s", err)
-			http.Error(
-				w,
-				"It was deleted",
-				http.StatusGone,
-			)
+			w.WriteHeader(http.StatusGone)
 			return
 		}
 		http.NotFound(w, r)
