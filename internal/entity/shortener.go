@@ -20,3 +20,8 @@ type URLs struct {
 	OriginalURL string `db:"original_url" json:"original_url"`
 	ShortURL    string `db:"short_url" json:"short_url"`
 }
+
+type CheckURL struct {
+	Deleted     bool   `db:"deleted"`
+	OriginalURL string `db:"original_url"`
+}

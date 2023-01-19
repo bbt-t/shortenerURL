@@ -2,7 +2,9 @@ package storage
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/bbt-t/shortenerURL/pkg"
 	"log"
 	"strings"
 	"time"
@@ -27,14 +29,17 @@ func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
 		Makes a request (selection of the original url by short) to the DB.
 		return: original url or error
 	*/
-	var result string
+	var result entity.CheckURL
 
 	err := db.Get(
 		&result,
-		"SELECT original_url FROM items WHERE short_url=$1",
+		"SELECT original_url, deleted FROM items WHERE short_url=$1",
 		shortURL,
 	)
-	return result, err
+	if result.Deleted {
+		return "", errDeleted
+	}
+	return result.OriginalURL, err
 }
 
 func addNewUser(db *sqlx.DB, userID uuid.UUID) {
@@ -90,6 +95,32 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 	return err
 }
 
+func getOriginalURLArray(db *sqlx.DB, userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+	var resultStructs []entity.URLs
+
+	err := db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	if len(resultStructs) == 0 {
+		return nil, errDBEmpty
+	}
+	urlArray := make([]map[string]string, len(resultStructs))
+
+	for _, item := range resultStructs {
+		temp := make(map[string]string, 2)
+
+		data, _ := json.Marshal(item)
+		_ = json.Unmarshal(data, &temp)
+
+		temp["short_url"] = fmt.Sprintf("%s/%s", baseURL, temp["short_url"])
+		urlArray = append(urlArray, temp)
+	}
+
+	return urlArray, nil
+}
+
 func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 	/*
 		Checking if the user exists in the DB.
@@ -127,6 +158,23 @@ func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) err
 		if _, err := db.NamedExec(query, &chunk); err != nil {
 			fmt.Println(err)
 			return err
+		}
+	}
+	return nil
+}
+
+func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
+	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+
+	for _, v := range inpURLs {
+		_, err := db.NamedExec(`UPDATE items SET deleted=:deleted WHERE id=:id AND user_id=:user_id`,
+			map[string]interface{}{
+				"deleted": true,
+				"id":      v,
+				"user_id": uid,
+			})
+		if err != nil {
+			return errDBUnknownID
 		}
 	}
 	return nil

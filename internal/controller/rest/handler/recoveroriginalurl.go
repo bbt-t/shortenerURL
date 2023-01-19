@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,9 +15,18 @@ func (s ShortenerHandler) recoverOriginalURL(w http.ResponseWriter, r *http.Requ
 		Handler for redirecting to original URL.
 		get ID from the route  -> search for the original url in DB:
 			if not -> 404
+			if status deleted -> 410
 	*/
 	if originalURL, err := s.s.GetOriginalURL(chi.URLParam(r, "id")); err != nil {
-		log.Printf("ERROR : %s", err)
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("ERROR : %s", err)
+			http.Error(
+				w,
+				fmt.Sprintf("It was deleted"),
+				http.StatusGone,
+			)
+			return
+		}
 		http.NotFound(w, r)
 	} else {
 		w.Header().Set("Location", originalURL)

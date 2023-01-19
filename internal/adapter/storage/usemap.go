@@ -93,7 +93,7 @@ func (m *mapDB) PingDB() error {
 	return nil
 }
 
-func (m *mapDB) DelURLArray(_ []byte, _ string) error {
+func (m *mapDB) DelURLArray(_ uuid.UUID, _ []byte) error {
 	return nil
 }
 

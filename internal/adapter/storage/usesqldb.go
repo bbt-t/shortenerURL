@@ -1,13 +1,9 @@
 package storage
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
-
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -62,29 +58,8 @@ func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map
 	/*
 		Gets all pairs "original" - "short" urls previously saved by the user.
 	*/
-	var resultStructs []entity.URLs
-
-	err := d.db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-	if len(resultStructs) == 0 {
-		return nil, errDBEmpty
-	}
-	urlArray := make([]map[string]string, len(resultStructs))
-
-	for _, item := range resultStructs {
-		temp := make(map[string]string, 2)
-
-		data, _ := json.Marshal(item)
-		_ = json.Unmarshal(data, &temp)
-
-		temp["short_url"] = fmt.Sprintf("%s/%s", baseURL, temp["short_url"])
-		urlArray = append(urlArray, temp)
-	}
-
-	return urlArray, nil
+	result, err := getOriginalURLArray(d.db, userID, baseURL)
+	return result, err
 }
 
 func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
@@ -108,21 +83,9 @@ func (d *sqlDatabase) PingDB() error {
 	return err
 }
 
-func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-
-	for _, v := range inpURLs {
-		_, err := d.db.NamedExec(`UPDATE items SET removed=:removed WHERE id=:id AND user_id=:user_id`,
-			map[string]interface{}{
-				"removed": true,
-				"id":      v,
-				"user_id": uid,
-			})
-		if err != nil {
-			return errDBUnknownID
-		}
-	}
-	return nil
+func (d *sqlDatabase) DelURLArray(uid uuid.UUID, inpJSON []byte) error {
+	err := deleteURLArray(d.db, uid, inpJSON)
+	return err
 }
 
 func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {

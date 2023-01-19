@@ -14,6 +14,6 @@ type DatabaseRepository interface {
 	GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error)
 	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
-	DelURLArray(inpJSON []byte, userID string) error
+	DelURLArray(userID uuid.UUID, inpJSON []byte) error
 	SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error
 }
