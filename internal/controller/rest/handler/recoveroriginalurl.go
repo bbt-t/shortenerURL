@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -22,7 +21,7 @@ func (s ShortenerHandler) recoverOriginalURL(w http.ResponseWriter, r *http.Requ
 			log.Printf("ERROR : %s", err)
 			http.Error(
 				w,
-				fmt.Sprintf("It was deleted"),
+				"It was deleted",
 				http.StatusGone,
 			)
 			return
