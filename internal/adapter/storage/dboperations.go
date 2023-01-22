@@ -158,7 +158,7 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 			INSERT INTO items (user_id, original_url, short_url) 
 			VALUES (:user_id, :original_url, :short_url) ON CONFLICT DO NOTHING
 			`
-	if _, err := db.NamedQueryContext(ctx, query, urlBatch); err != nil {
+	if rows, err := db.NamedQueryContext(ctx, query, urlBatch); rows.Err() != nil {
 		return err
 	}
 
