@@ -2,6 +2,12 @@ package entity
 
 import "github.com/gofrs/uuid"
 
+type DBMapFilling struct {
+	OriginalURL string `json:"original_url"`
+	ShortURL    string `json:"short_url"`
+	Deleted     bool   `json:"-"`
+}
+
 type URLBatch struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"-"`

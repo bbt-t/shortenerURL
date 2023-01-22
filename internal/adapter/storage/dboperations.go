@@ -174,8 +174,6 @@ type ForTestDel struct {
 func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 
-	log.Printf("---> INPUT URLS --->\n\n%v", inpURLs)
-
 	//var info []map[string]interface{}
 
 	//for _, v := range inpURLs {
