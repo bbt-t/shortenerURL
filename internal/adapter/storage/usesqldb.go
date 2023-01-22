@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"context"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
+
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -88,7 +90,7 @@ func (d *sqlDatabase) DelURLArray(uid uuid.UUID, inpJSON []byte) error {
 	return err
 }
 
-func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
-	err := saveURLBatch(d.db, uid, inpURL)
+func (d *sqlDatabase) SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+	err := saveURLBatch(ctx, d.db, uid, inpURL)
 	return err
 }

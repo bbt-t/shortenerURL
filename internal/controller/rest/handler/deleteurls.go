@@ -22,13 +22,7 @@ func (s ShortenerHandler) deleteURL(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
-	if err := s.s.DelURLArray(userID, payload); err != nil {
-		http.Error(
-			w,
-			fmt.Sprintf("Invalid prameters: %s", payload),
-			http.StatusConflict,
-		)
-		return
-	}
+	go s.s.DelURLArray(userID, payload)
+
 	w.WriteHeader(http.StatusAccepted)
 }

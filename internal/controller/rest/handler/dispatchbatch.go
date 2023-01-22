@@ -1,16 +1,16 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bbt-t/shortenerURL/internal/entity"
+	"github.com/bbt-t/shortenerURL/pkg"
+	"github.com/gofrs/uuid"
 	"io"
 	"log"
 	"net/http"
-
-	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
-
-	"github.com/gofrs/uuid"
+	"time"
 )
 
 func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) {
@@ -49,8 +49,21 @@ func (s ShortenerHandler) buildURLBatch(w http.ResponseWriter, r *http.Request) 
 
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
+	// must do deepcopy (!):
 	copySt := append(make([]entity.URLBatchInp, 0, len(urlBatchForSave)), urlBatchForSave...)
-	_ = s.s.SaveURLArray(userID, copySt) // must do deepcopy (!)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := s.s.SaveURLArray(ctx, userID, copySt); err != nil {
+		log.Print(err)
+		http.Error(
+			w,
+			"!!! too much lines !!!",
+			http.StatusRequestEntityTooLarge,
+		)
+		return
+	}
 
 	temp, _ := json.Marshal(urlBatchForSave)
 	_ = json.Unmarshal(temp, &urlBatchForSend)

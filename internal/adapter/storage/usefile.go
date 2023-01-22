@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 	"log"
@@ -174,6 +175,6 @@ func (f *fileDB) DelURLArray(_ uuid.UUID, _ []byte) error {
 	return nil
 }
 
-func (f *fileDB) SaveURLArray(_ uuid.UUID, _ []entity.URLBatchInp) error {
+func (f *fileDB) SaveURLArray(_ context.Context, _ uuid.UUID, _ []entity.URLBatchInp) error {
 	return nil
 }

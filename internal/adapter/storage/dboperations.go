@@ -1,15 +1,16 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/pkg"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
+	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -146,36 +147,50 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 	return urlArray
 }
 
-func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
+func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
 	for i, item := range urlBatch {
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 		urlBatch[i].UserID = uid
 	}
 
-	query := "INSERT INTO items (user_id, original_url, short_url) VALUES (:user_id, :original_url, :short_url)"
-	for _, chunk := range urlBatch {
-		if _, err := db.NamedExec(query, &chunk); err != nil {
-			fmt.Println(err)
-			return err
-		}
+	query := `
+			INSERT INTO items (user_id, original_url, short_url) 
+			VALUES (:user_id, :original_url, :short_url) ON CONFLICT DO NOTHING
+			`
+	if _, err := db.NamedQueryContext(ctx, query, urlBatch); err != nil {
+		return err
 	}
+
 	return nil
+}
+
+type ForTestDel struct {
+	Deleted  bool      `db:"deleted"`
+	ShortURL string    `db:"short_url"`
+	UserID   uuid.UUID `db:"user_id"`
 }
 
 func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 
+	var info []map[string]interface{}
+
 	for _, v := range inpURLs {
-		_, err := db.NamedExec(`UPDATE items SET deleted=:deleted WHERE id=:id AND user_id=:user_id`,
-			map[string]interface{}{
-				"deleted": true,
-				"id":      v,
-				"user_id": uid,
-			})
-		if err != nil {
-			return errDBUnknownID
+		info = append(info, map[string]interface{}{
+			"deleted":   true,
+			"short_url": v,
+			"user_id":   uid,
+		})
+	}
+
+	query := "UPDATE items SET deleted=:deleted WHERE user_id=:user_id AND short_url=:short_url"
+
+	for _, v := range info {
+		if _, err := db.NamedExec(query, v); err != nil {
+			return err
 		}
 	}
+
 	return nil
 }

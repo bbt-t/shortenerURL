@@ -1,7 +1,10 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/bbt-t/shortenerURL/internal/entity"
+
 	"github.com/gofrs/uuid"
 )
 
@@ -12,7 +15,7 @@ type DatabaseRepository interface {
 	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
 	DelURLArray(userID uuid.UUID, inpJSON []byte) error
-	SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error
+	SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error
 }
 
 type ShortenerService struct {
@@ -51,6 +54,6 @@ func (s ShortenerService) DelURLArray(userID uuid.UUID, inpJSON []byte) error {
 	return s.repo.DelURLArray(userID, inpJSON)
 }
 
-func (s ShortenerService) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
-	return s.repo.SaveURLArray(uid, inpURL)
+func (s ShortenerService) SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+	return s.repo.SaveURLArray(ctx, uid, inpURL)
 }

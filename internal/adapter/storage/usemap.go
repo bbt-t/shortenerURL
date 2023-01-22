@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"log"
 	"sync"
 
@@ -97,6 +98,6 @@ func (m *mapDB) DelURLArray(_ uuid.UUID, _ []byte) error {
 	return nil
 }
 
-func (m *mapDB) SaveURLArray(_ uuid.UUID, _ []entity.URLBatchInp) error {
+func (m *mapDB) SaveURLArray(_ context.Context, _ uuid.UUID, _ []entity.URLBatchInp) error {
 	return nil
 }
