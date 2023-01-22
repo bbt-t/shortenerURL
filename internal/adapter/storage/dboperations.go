@@ -174,20 +174,26 @@ type ForTestDel struct {
 func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 
-	var info []map[string]interface{}
+	log.Printf("---> INPUT URLS --->\n\n%v", inpURLs)
 
-	for _, v := range inpURLs {
-		info = append(info, map[string]interface{}{
-			"deleted":   true,
-			"short_url": v,
-			"user_id":   uid,
-		})
-	}
+	//var info []map[string]interface{}
+
+	//for _, v := range inpURLs {
+	//	info = append(info, map[string]interface{}{
+	//		"deleted":   true,
+	//		"short_url": v,
+	//		"user_id":   uid,
+	//	})
+	//}
 
 	query := "UPDATE items SET deleted=:deleted WHERE user_id=:user_id AND short_url=:short_url"
 
-	for _, v := range info {
-		if _, err := db.NamedExec(query, v); err != nil {
+	for _, v := range inpURLs {
+		if _, err := db.NamedExec(query, map[string]interface{}{
+			"deleted":   true,
+			"short_url": v,
+			"user_id":   uid,
+		}); err != nil {
 			return err
 		}
 	}
