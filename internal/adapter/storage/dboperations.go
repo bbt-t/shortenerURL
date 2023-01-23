@@ -183,18 +183,46 @@ func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	//		"user_id":   uid,
 	//	})
 	//}
+	////////////////////////////////////////////////
+	//query := "UPDATE items SET deleted=:deleted WHERE user_id=:user_id AND short_url=:short_url"
+	//
+	//for _, v := range inpURLs {
+	//	if _, err := db.NamedExec(query, map[string]interface{}{
+	//		"deleted":   true,
+	//		"short_url": v,
+	//		"user_id":   uid,
+	//	}); err != nil {
+	//		return err
+	//	}
+	//}
 
-	query := "UPDATE items SET deleted=:deleted WHERE user_id=:user_id AND short_url=:short_url"
+	//////////////////////////////////////////////////
+	fail := func(err error) error {
+		return fmt.Errorf("CreateOrder: %v", err)
+	}
+
+	// Get a Tx for making transaction requests.
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fail(err)
+	}
+	// Defer a rollback in case anything fails.
+	defer tx.Rollback()
+	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
 
 	for _, v := range inpURLs {
-		if _, err := db.NamedExec(query, map[string]interface{}{
-			"deleted":   true,
-			"short_url": v,
-			"user_id":   uid,
-		}); err != nil {
-			return err
+		if _, err := db.ExecContext(ctx, qtx, uid, v); err != nil {
+			log.Println(err)
+			return fail(err)
 		}
 	}
+
+	if err = tx.Commit(); err != nil {
+		return fail(err)
+	}
+
+	/////////////////////////
 
 	return nil
 }
