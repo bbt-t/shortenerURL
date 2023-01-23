@@ -22,7 +22,7 @@ func (s ShortenerHandler) deleteURL(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
-	_ = s.s.DelURLArray(userID, payload)
+	go s.s.DelURLArray(userID, payload)
 
 	w.WriteHeader(http.StatusAccepted)
 }

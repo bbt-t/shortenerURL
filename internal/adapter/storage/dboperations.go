@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
@@ -193,4 +194,85 @@ func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	}
 
 	return nil
+}
+
+type MustUpdate struct {
+	Stmt   *sqlx.Stmt
+	UserID uuid.UUID
+	InpURL string
+}
+
+func deleteURLArrayFanIn(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
+
+	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+	var query []MustUpdate
+	for _, v := range inpURLs {
+		q, _ := db.Preparex("UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2")
+
+		query = append(query, MustUpdate{
+			Stmt:   q,
+			UserID: uid,
+			InpURL: v,
+		})
+	}
+
+	_ = Batch(query)
+	return nil
+}
+
+func Batch(ids []MustUpdate) error {
+	in := gen(ids)
+	chanSlice := []<-chan bool{}
+	for _ = range ids {
+		chanSlice = append(chanSlice, sq(in))
+	}
+	MergeChan(chanSlice...)
+	return nil
+}
+
+func MergeChan(cs ...<-chan bool) {
+	var wg sync.WaitGroup
+	out := make(chan bool)
+
+	output := func(c <-chan bool) {
+		for n := range c {
+			out <- n
+		}
+		wg.Done()
+	}
+	wg.Add(len(cs))
+	for _, c := range cs {
+		go output(c)
+	}
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+}
+
+func gen(nums []MustUpdate) <-chan MustUpdate {
+	out := make(chan MustUpdate, len(nums)) // нужно указывать размер канала ОБЯЗАТЕЛЬНО!
+	go func() {
+		for _, n := range nums {
+			out <- n
+		}
+		close(out)
+	}()
+	return out
+}
+func sq(in <-chan MustUpdate) <-chan bool {
+
+	out := make(chan bool)
+	go func() {
+		for n := range in {
+			if len(in) != 0 {
+				if _, err := n.Stmt.Exec(n.UserID, n.InpURL); err != nil {
+					log.Println(err)
+				}
+			}
+		}
+		out <- true
+		close(out)
+	}()
+	return out
 }
