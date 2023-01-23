@@ -223,7 +223,7 @@ func deleteURLArrayFanIn(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 func Batch(ids []MustUpdate) error {
 	in := gen(ids)
 	chanSlice := []<-chan bool{}
-	for _ = range ids {
+	for range ids { //?
 		chanSlice = append(chanSlice, sq(in))
 	}
 	MergeChan(chanSlice...)
