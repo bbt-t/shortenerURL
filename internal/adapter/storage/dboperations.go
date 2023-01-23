@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -165,64 +166,31 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 	return nil
 }
 
-type ForTestDel struct {
-	Deleted  bool      `db:"deleted"`
-	ShortURL string    `db:"short_url"`
-	UserID   uuid.UUID `db:"user_id"`
-}
-
 func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
 
-	//var info []map[string]interface{}
-
-	//for _, v := range inpURLs {
-	//	info = append(info, map[string]interface{}{
-	//		"deleted":   true,
-	//		"short_url": v,
-	//		"user_id":   uid,
-	//	})
-	//}
-	////////////////////////////////////////////////
-	//query := "UPDATE items SET deleted=:deleted WHERE user_id=:user_id AND short_url=:short_url"
-	//
-	//for _, v := range inpURLs {
-	//	if _, err := db.NamedExec(query, map[string]interface{}{
-	//		"deleted":   true,
-	//		"short_url": v,
-	//		"user_id":   uid,
-	//	}); err != nil {
-	//		return err
-	//	}
-	//}
-
-	//////////////////////////////////////////////////
 	fail := func(err error) error {
-		return fmt.Errorf("CreateOrder: %v", err)
+		log.Println("FAIL UPDATE --> ROLLBACK")
+		return fmt.Errorf("try update: %v", err)
 	}
 
-	// Get a Tx for making transaction requests.
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return fail(err)
 	}
-	// Defer a rollback in case anything fails.
 	defer tx.Rollback()
-	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
 
 	for _, v := range inpURLs {
-		if _, err := db.ExecContext(ctx, qtx, uid, v); err != nil {
-			log.Println(err)
-			return fail(err)
+		var id string
+		if err := tx.QueryRowContext(ctx, qtx, uid, v).Scan(&id); err != nil {
+			return fail(errors.New("NOT FOUND --> rollback"))
 		}
 	}
-
 	if err = tx.Commit(); err != nil {
 		return fail(err)
 	}
-
-	/////////////////////////
 
 	return nil
 }
