@@ -111,7 +111,7 @@ func (m *mapDB) PingDB() error {
 	return nil
 }
 
-func (m *mapDB) DelURLArray(uid uuid.UUID, inpJSON []byte) error {
+func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 
 	for i, item := range m.mapURL[uid] {
@@ -121,6 +121,7 @@ func (m *mapDB) DelURLArray(uid uuid.UUID, inpJSON []byte) error {
 			}
 		}
 	}
+	ctx.Done()
 	return nil
 }
 

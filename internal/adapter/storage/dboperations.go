@@ -155,7 +155,6 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 		urlBatch[i].UserID = uid
 	}
-
 	query := `
 			INSERT INTO items (user_id, original_url, short_url) 
 			VALUES (:user_id, :original_url, :short_url) ON CONFLICT DO NOTHING
@@ -163,12 +162,11 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 	if rows, err := db.NamedQueryContext(ctx, query, urlBatch); rows.Err() != nil {
 		return err
 	}
-
 	return nil
 }
 
 // ////// с такой проходит 1/3 14inc /////////////
-func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
+func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
 
@@ -177,7 +175,6 @@ func deleteURLArray(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 		return fmt.Errorf("try update: %v", err)
 	}
 
-	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return fail(err)
@@ -205,7 +202,7 @@ type MustUpdate struct {
 	InpURL string
 }
 
-// ////// с такой вообще не проходит 14inc //////////////
+// /////// с такой вообще не проходит 14inc //////////////
 func deleteURLArrayFanIn(db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
