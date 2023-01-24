@@ -36,7 +36,7 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 	*/
 	route := chi.NewRouter()
 	route.Use(
-		//middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
+		middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
 		middleware.Logger,
 		middleware.Recoverer,
 		// Compress:

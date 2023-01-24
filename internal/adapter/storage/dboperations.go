@@ -157,7 +157,7 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 	}
 	query := `
 			INSERT INTO items (user_id, original_url, short_url) 
-			VALUES (:user_id, :original_url, :short_url) ON CONFLICT DO NOTHING
+			VALUES (:user_id, :original_url, :short_url)
 			`
 	if rows, err := db.NamedQueryContext(ctx, query, urlBatch); rows.Err() != nil {
 		return err
@@ -196,7 +196,6 @@ func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []b
 
 func deleteURLArrayQueue(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-
 	query := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
 
 	newUPDQueue := queue.NewQueue("Batch Update")
@@ -216,9 +215,7 @@ func deleteURLArrayQueue(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSO
 			Action: action,
 		})
 	}
-
 	newUPDQueue.AddJobs(jobs)
-
 	worker := queue.NewWorker(newUPDQueue)
 	worker.DoWork()
 
