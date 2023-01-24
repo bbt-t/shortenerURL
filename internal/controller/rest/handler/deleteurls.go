@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/gofrs/uuid"
 )
@@ -23,9 +22,9 @@ func (s ShortenerHandler) deleteURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
-	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
-	defer cancel()
-	_ = s.s.DelURLArray(ctx, userID, payload)
+
+	ctx := context.Background()
+	go s.s.DelURLArray(ctx, userID, payload)
 
 	w.WriteHeader(http.StatusAccepted)
 }
