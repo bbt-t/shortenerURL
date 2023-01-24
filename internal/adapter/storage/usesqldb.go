@@ -2,6 +2,9 @@ package storage
 
 import (
 	"context"
+	"fmt"
+	"github.com/bbt-t/shortenerURL/internal/adapter/storage/queue"
+	"github.com/bbt-t/shortenerURL/pkg"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
@@ -87,8 +90,37 @@ func (d *sqlDatabase) PingDB() error {
 
 func (d *sqlDatabase) DelURLArray(ctx context.Context, uid uuid.UUID, inpJSON []byte) error {
 	//err := deleteURLArray(ctx, d.db, uid, inpJSON)
-	err := deleteURLArrayQueue(ctx, d.db, uid, inpJSON)
-	return err
+	//err := deleteURLArrayQueue(ctx, d.db, uid, inpJSON)
+	//return err
+
+	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+
+	query := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
+
+	newUPDQueue := queue.NewQueue("Batch Update")
+	var jobs []queue.Job
+
+	for _, update := range inpURLs {
+		upd := update
+		action := func() error {
+			if _, err := d.db.ExecContext(ctx, query, uid, upd); err != nil {
+				log.Println(err)
+				return err
+			}
+			return nil
+		}
+		jobs = append(jobs, queue.Job{
+			Name:   fmt.Sprintf("Importing new update: %s", upd),
+			Action: action,
+		})
+	}
+
+	newUPDQueue.AddJobs(jobs)
+
+	worker := queue.NewWorker(newUPDQueue)
+	worker.DoWork()
+
+	return nil
 }
 
 func (d *sqlDatabase) SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error {
