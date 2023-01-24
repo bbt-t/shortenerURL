@@ -24,7 +24,7 @@ func (s ShortenerHandler) deleteURL(w http.ResponseWriter, r *http.Request) {
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
 	ctx := context.Background()
-	go s.s.DelURLArray(ctx, userID, payload)
+	_ = s.s.DelURLArray(ctx, userID, payload)
 
 	w.WriteHeader(http.StatusAccepted)
 }
