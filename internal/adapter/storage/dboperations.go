@@ -2,110 +2,137 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
-	"github.com/bbt-t/shortenerURL/internal/adapter/storage/queue"
 	"github.com/bbt-t/shortenerURL/internal/entity"
 	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/lib/pq"
 )
 
-func createTable(db *sqlx.DB, schema string) {
+func createTable(ctx context.Context, db *pgxpool.Pool, schema string) {
 	/*
 		Executes SQL commands at startup.
 		param schema: commands
 	*/
-	db.MustExec(schema /* SQL commands */)
+	if _, err := db.Exec(ctx, schema /* SQL commands */); err != nil {
+		log.Fatal(err)
+	}
 	log.Println("SCHEMA CREATED")
 }
 
-func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
+func getOriginalURL(db *pgxpool.Pool, shortURL string) (string, error) {
 	/*
 		Makes a request (selection of the original url by short) to the DB.
 		return: original url or error
 	*/
 	var result entity.CheckURL
-
-	err := db.Get(
-		&result,
+	ctx := context.Background()
+	err := db.QueryRow(
+		ctx,
 		"SELECT original_url, deleted FROM items WHERE short_url=$1",
 		shortURL,
-	)
+	).Scan(&result.OriginalURL, &result.Deleted)
 	if result.Deleted {
 		return "", errDeleted
 	}
 	return result.OriginalURL, err
 }
 
-func addNewUser(db *sqlx.DB, userID uuid.UUID) {
+func addNewUser(db *pgxpool.Pool, userID uuid.UUID) {
 	/*
 		Adds a new user to the DB.
 		param userID: UUID issued when receiving the cookie (middleware)
 	*/
-	info := map[string]interface{}{
-		"user_id":   userID,
-		"create_at": time.Now(),
-	}
-	if _, err := db.NamedExec(
-		"INSERT INTO users (user_id, create_at) VALUES (:user_id, :create_at)",
-		info,
-	); err != nil {
+	ctx := context.Background()
+	if _, err := db.Exec(ctx, "INSERT INTO users (user_id) VALUES ($1)", userID); err != nil {
 		log.Printf("ERRER : %+v", err)
 	}
 }
 
-func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error {
+func saveURL(db *pgxpool.Pool, userID uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adds short url to DB.
 	*/
-	var check bool
-	info := map[string]interface{}{
-		"user_id":      userID,
-		"original_url": originalURL,
-		"short_url":    shortURL,
-	}
+	//var check bool
+	//if err := db.Get(
+	//	&check,
+	//	"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
+	//	userID,
+	//	originalURL,
+	//); err != nil && err != sql.ErrNoRows {
+	//	log.Printf("error checking if row exists %+v", err)
+	//}
+	//if check {
+	//	return errHTTPConflict
+	//}
+	//
+	//_, err := db.NamedExec(
+	//	`
+	//INSERT INTO items (user_id, original_url, short_url)
+	//VALUES (:user_id, :original_url, :short_url)
+	//`,
+	//	info,
+	//)
+	//if err != nil {
+	//	log.Printf("ERRER : %+v", err)
+	//}
+	//return err
 
-	if err := db.Get(
-		&check,
+	ctx := context.Background()
+
+	var check bool
+	if err := db.QueryRow(
+		ctx,
 		"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
 		userID,
 		originalURL,
-	); err != nil && err != sql.ErrNoRows {
+	).Scan(&check); err != nil && err != pgx.ErrNoRows { // ??? errors.Is()
 		log.Printf("error checking if row exists %+v", err)
 	}
 	if check {
 		return errHTTPConflict
 	}
 
-	_, err := db.NamedExec(
-		`
-	INSERT INTO items (user_id, original_url, short_url) 
-	VALUES (:user_id, :original_url, :short_url)
-	`,
-		info,
+	_, err := db.Exec(
+		ctx,
+		"INSERT INTO items (user_id, original_url, short_url) values($1, $2, $3)",
+		userID,
+		originalURL,
+		shortURL,
 	)
-	if err != nil {
-		log.Printf("ERRER : %+v", err)
-	}
+
 	return err
 }
 
-func getOriginalURLArray(db *sqlx.DB, userID uuid.UUID, baseURL string) ([]map[string]string, error) {
-	var resultStructs []entity.URLs
-
-	err := db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
+func getOriginalURLArray(db *pgxpool.Pool, userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+	var resultStructs []*entity.URLs // *???
+	ctx := context.Background()
+	rows, err := db.Query(
+		ctx,
+		"SELECT original_url, short_url FROM items WHERE user_id=$1 and deleted is false",
+		userID,
+	)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		url := &entity.URLs{} // &???
+		if err = rows.Scan(&url.OriginalURL, &url.ShortURL); err == nil {
+			resultStructs = append(resultStructs, url)
+		}
+	}
+
 	if len(resultStructs) == 0 {
 		return nil, errDBEmpty
 	}
@@ -124,13 +151,14 @@ func getOriginalURLArray(db *sqlx.DB, userID uuid.UUID, baseURL string) ([]map[s
 	return urlArray, nil
 }
 
-func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
+func checkUser(db *pgxpool.Pool, uid uuid.UUID) (exists bool) {
 	/*
 		Checking if the user exists in the DB.
 		param uid: UUID issued when receiving the cookie (middleware)
 	*/
-	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", uid)
-	if err != nil && err != sql.ErrNoRows {
+	ctx := context.Background()
+	err := db.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)", uid).Scan(&exists)
+	if !errors.Is(err, pgx.ErrNoRows) {
 		log.Printf("error checking if row exists %+v", err)
 	}
 	return exists
@@ -149,75 +177,65 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 	return urlArray
 }
 
-func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
+func saveURLBatch(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
 	for i, item := range urlBatch {
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 		urlBatch[i].UserID = uid
 	}
-	query := `
-			INSERT INTO items (user_id, original_url, short_url) 
-			VALUES (:user_id, :original_url, :short_url)
-			`
-	if rows, err := db.NamedQueryContext(ctx, query, urlBatch); rows.Err() != nil {
-		return err
+
+	batch := &pgx.Batch{}
+
+	for _, url := range urlBatch {
+		batch.Queue(
+			"INSERT INTO items (user_id, original_url, short_url) VALUES($1, $2, $3)",
+			url.UserID,
+			url.OriginalURL,
+			url.ShortURL,
+		)
 	}
-	return nil
+
+	query := db.SendBatch(ctx, batch)
+	defer query.Close()
+
+	_, err := query.Exec()
+
+	return err
 }
 
-// ////// с такой проходит 1/3 14inc /////////////
-func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
+func deleteURLArray(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, inpJSON []byte) error {
 	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
+	//qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
+	//
+	//fail := func(err error) error {
+	//	log.Println("FAIL UPDATE --> ROLLBACK")
+	//	return fmt.Errorf("try update: %v", err)
+	//}
+	//
+	//tx, err := db.BeginTx(ctx, nil)
+	//if err != nil {
+	//	return fail(err)
+	//}
+	//defer tx.Rollback()
+	//
+	//for _, v := range inpURLs {
+	//	var id string
+	//	if err := tx.QueryRowContext(ctx, qtx, uid, v).Scan(&id); err != nil {
+	//		return fail(errors.New("NOT FOUND --> rollback"))
+	//	}
+	//}
+	//if err = tx.Commit(); err != nil {
+	//	return fail(err)
+	//}
 
-	fail := func(err error) error {
-		log.Println("FAIL UPDATE --> ROLLBACK")
-		return fmt.Errorf("try update: %v", err)
-	}
-
-	tx, err := db.BeginTx(ctx, nil)
+	_, err := db.Exec(
+		ctx,
+		"UPDATE items SET deleted=true WHERE user_id = $1 AND short_url = any($2::text[])",
+		uid,
+		pq.Array(inpURLs),
+	)
 	if err != nil {
-		return fail(err)
+		log.Println(err)
 	}
-	defer tx.Rollback()
-
-	for _, v := range inpURLs {
-		var id string
-		if err := tx.QueryRowContext(ctx, qtx, uid, v).Scan(&id); err != nil {
-			return fail(errors.New("NOT FOUND --> rollback"))
-		}
-	}
-	if err = tx.Commit(); err != nil {
-		return fail(err)
-	}
-
-	return nil
-}
-
-func deleteURLArrayQueue(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-	query := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
-
-	newUPDQueue := queue.NewQueue("Batch Update")
-	var jobs []queue.Job
-
-	for _, update := range inpURLs {
-		upd := update
-		action := func() error {
-			if _, err := db.ExecContext(ctx, query, uid, upd); err != nil {
-				log.Println(err)
-				return err
-			}
-			return nil
-		}
-		jobs = append(jobs, queue.Job{
-			Name:   fmt.Sprintf("Importing new update: %s", upd),
-			Action: action,
-		})
-	}
-	newUPDQueue.AddJobs(jobs)
-	worker := queue.NewWorker(newUPDQueue)
-	worker.DoWork()
-
-	return nil
+	return err
 }

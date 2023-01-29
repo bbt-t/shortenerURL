@@ -2,17 +2,17 @@ package storage
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type sqlDatabase struct {
-	db *sqlx.DB
+	db *pgxpool.Pool
 }
 
 func NewSQLDatabase(dsn string) DatabaseRepository {
@@ -21,14 +21,15 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 		param nameDB: received parameter (flag) to select db
 		return: db-object or nil
 	*/
-	db, err := sqlx.Connect("postgres", dsn)
+	ctx := context.Background()
+	db, err := pgxpool.New(ctx, dsn)
 
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	createTable(db, _tableItems /* SQL command */)
+	createTable(ctx, db, _tableItems /* SQL command */)
 	return &sqlDatabase{
 		db: db,
 	}
@@ -76,7 +77,8 @@ func (d *sqlDatabase) PingDB() error {
 	/*
 		Checking connection with ctx.Background.
 	*/
-	err := d.db.Ping()
+	ctx := context.Background()
+	err := d.db.Ping(ctx)
 	if err != nil {
 		log.Println(err)
 	} else {
@@ -86,8 +88,7 @@ func (d *sqlDatabase) PingDB() error {
 }
 
 func (d *sqlDatabase) DelURLArray(ctx context.Context, uid uuid.UUID, inpJSON []byte) error {
-	//err := deleteURLArray(ctx, d.db, uid, inpJSON)
-	err := deleteURLArrayQueue(ctx, d.db, uid, inpJSON)
+	err := deleteURLArray(ctx, d.db, uid, inpJSON)
 	return err
 }
 
