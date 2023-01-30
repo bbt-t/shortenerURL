@@ -171,7 +171,7 @@ func (f *fileDB) PingDB() error {
 	return err
 }
 
-func (f *fileDB) DelURLArray(_ context.Context, _ uuid.UUID, _ []byte) error {
+func (f *fileDB) DelURLArray(_ context.Context, _ uuid.UUID, _ []string) error {
 	return nil
 }
 

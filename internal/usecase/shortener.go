@@ -14,7 +14,7 @@ type DatabaseRepository interface {
 	GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error)
 	SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error
 	PingDB() error
-	DelURLArray(ctx context.Context, userID uuid.UUID, inpJSON []byte) error
+	DelURLArray(ctx context.Context, userID uuid.UUID, inpURLs []string) error
 	SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error
 }
 
@@ -50,8 +50,8 @@ func (s ShortenerService) PingDB() error {
 	return s.repo.PingDB()
 }
 
-func (s ShortenerService) DelURLArray(ctx context.Context, userID uuid.UUID, inpJSON []byte) error {
-	return s.repo.DelURLArray(ctx, userID, inpJSON)
+func (s ShortenerService) DelURLArray(ctx context.Context, userID uuid.UUID, inpURLs []string) error {
+	return s.repo.DelURLArray(ctx, userID, inpURLs)
 }
 
 func (s ShortenerService) SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error {

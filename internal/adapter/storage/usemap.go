@@ -7,8 +7,6 @@ import (
 	"sync"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -111,8 +109,8 @@ func (m *mapDB) PingDB() error {
 	return nil
 }
 
-func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpJSON []byte) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
+	//inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 
 	for i, item := range m.mapURL[uid] {
 		for _, v := range inpURLs {

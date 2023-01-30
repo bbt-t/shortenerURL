@@ -10,10 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bbt-t/shortenerURL/internal/adapter/storage/queue"
 	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
-
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -166,8 +163,8 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 }
 
 // ////// с такой проходит 1/3 14inc /////////////
-func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpURLs []string) error {
+	//inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
 
 	fail := func(err error) error {
@@ -194,30 +191,30 @@ func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []b
 	return nil
 }
 
-func deleteURLArrayQueue(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpJSON []byte) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-	query := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
-
-	newUPDQueue := queue.NewQueue("Batch Update")
-	var jobs []queue.Job
-
-	for _, update := range inpURLs {
-		upd := update
-		action := func() error {
-			if _, err := db.ExecContext(ctx, query, uid, upd); err != nil {
-				log.Println(err)
-				return err
-			}
-			return nil
-		}
-		jobs = append(jobs, queue.Job{
-			Name:   fmt.Sprintf("Importing new update: %s", upd),
-			Action: action,
-		})
-	}
-	newUPDQueue.AddJobs(jobs)
-	worker := queue.NewWorker(newUPDQueue)
-	worker.DoWork()
-
-	return nil
-}
+//func deleteURLArrayQueue(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpURLs []string) error {
+//
+//	query := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
+//
+//	newUPDQueue := queue.NewQueue("Batch Update")
+//	var jobs []queue.Job
+//
+//	for _, update := range inpURLs {
+//		upd := update
+//		action := func() error {
+//			if _, err := db.ExecContext(ctx, query, uid, upd); err != nil {
+//				log.Println(err)
+//				return err
+//			}
+//			return nil
+//		}
+//		jobs = append(jobs, queue.Job{
+//			Name:   fmt.Sprintf("Importing new update: %s", upd),
+//			Action: action,
+//		})
+//	}
+//	newUPDQueue.AddJobs(jobs)
+//	worker := queue.NewWorker(newUPDQueue)
+//	worker.DoWork()
+//
+//	return nil
+//}
