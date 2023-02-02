@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
@@ -32,27 +33,10 @@ func NewFileDB(pathFile string) DatabaseRepository {
 	}
 }
 
-func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
+func (f *fileDB) saveToFile(data map[uuid.UUID][]entity.DBMapFilling) error {
 	/*
 		Create/overwrite and write to a file.gob (gob-format).
 	*/
-	defer f.mutex.Unlock()
-	f.mutex.Lock()
-
-	data, err := f.get()
-	if err != nil {
-		data = make(map[uuid.UUID]map[string]string)
-	}
-	if empty {
-		data[userID] = make(map[string]string)
-	}
-
-	_, ok := data[userID][k]
-	if ok {
-		return errHTTPConflict
-	}
-	data[userID][k] = v
-
 	saveTo, errOpen := os.OpenFile(f.PathToFile,
 		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
 		0700,
@@ -66,7 +50,7 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	defer saveTo.Close()
 
 	encoder := gob.NewEncoder(saveTo)
-	err = encoder.Encode(data)
+	err := encoder.Encode(data)
 	if err != nil {
 		log.Printf("Cannot save to -> %+v", f.PathToFile)
 		return err
@@ -74,11 +58,11 @@ func (f *fileDB) save(userID uuid.UUID, k, v string, empty bool) error {
 	return nil
 }
 
-func (f *fileDB) get() (map[uuid.UUID]map[string]string, error) {
+func (f *fileDB) get() (map[uuid.UUID][]entity.DBMapFilling, error) {
 	/*
 		Open file and take map-object from there.
 	*/
-	var data map[uuid.UUID]map[string]string
+	data := make(map[uuid.UUID][]entity.DBMapFilling)
 
 	loadFrom, err := os.OpenFile(f.PathToFile,
 		os.O_RDONLY,
@@ -102,7 +86,12 @@ func (f *fileDB) NewUser(userID uuid.UUID) {
 	/*
 		Create new user in DB.
 	*/
-	_ = f.save(userID, "", "", true)
+
+	data, _ := f.get()
+	data[userID] = []entity.DBMapFilling{}
+	if errSave := f.saveToFile(data); errSave != nil {
+		log.Println(errSave)
+	}
 }
 
 func (f *fileDB) GetOriginalURL(k string) (string, error) {
@@ -119,9 +108,16 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	fileMap, _ := f.get()
 	f.mutex.RLock()
 	for _, v := range fileMap {
-		result = v[k]
-		if result != "" {
-			break
+		for _, val := range v {
+			if k == val.ShortURL && val.Deleted {
+				return "", errDBUnknownID
+			}
+			if k == val.ShortURL {
+				result = val.OriginalURL
+			}
+			if result != "" {
+				break
+			}
 		}
 	}
 	if result == "" {
@@ -132,14 +128,20 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 
 func (f *fileDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	defer f.mutex.RUnlock()
-
 	fileMap, _ := f.get()
 	f.mutex.RLock()
+
 	allURL, ok := fileMap[userID]
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
-	result := convertToArrayMap(allURL, baseURL)
+
+	convInfo := make(map[string]string)
+	for _, item := range allURL {
+		convInfo[item.ShortURL] = item.OriginalURL
+	}
+	result := convertToArrayMap(convInfo, baseURL)
+
 	return result, nil
 }
 
@@ -147,8 +149,35 @@ func (f *fileDB) SaveShortURL(userID uuid.UUID, k, v string) error {
 	/*
 		Calling a func to save info to a file.
 	*/
-	err := f.save(userID, k, v, false)
-	return err
+
+	f.mutex.Lock()
+
+	data, err := f.get()
+	if err != nil {
+		data = make(map[uuid.UUID][]entity.DBMapFilling) //map[uuid.UUID][]entity.DBMapFilling
+	}
+
+	for _, v := range data[userID] {
+		if v.ShortURL == k {
+			return errHTTPConflict
+		}
+	}
+	f.mutex.Unlock()
+
+	f.mutex.Lock()
+	data[userID] = append(data[userID], entity.DBMapFilling{
+		OriginalURL: v,
+		ShortURL:    k,
+		Deleted:     false,
+	})
+	f.mutex.Unlock()
+
+	if errSave := f.saveToFile(data); errSave != nil {
+		log.Println(errSave)
+		return errSave
+	}
+
+	return nil
 }
 
 func (f *fileDB) PingDB() error {
@@ -171,10 +200,48 @@ func (f *fileDB) PingDB() error {
 	return err
 }
 
-func (f *fileDB) DelURLArray(_ context.Context, _ uuid.UUID, _ []string) error {
+func (f *fileDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
+	fileMap, _ := f.get()
+	for i, item := range fileMap[uid] {
+		for _, v := range inpURLs {
+			if item.ShortURL == v {
+				fileMap[uid][i].Deleted = true
+			}
+		}
+	}
+	if errSave := f.saveToFile(fileMap); errSave != nil {
+		log.Println(errSave)
+		return errSave
+	}
+	ctx.Done()
+
 	return nil
 }
 
-func (f *fileDB) SaveURLArray(_ context.Context, _ uuid.UUID, _ []entity.URLBatchInp) error {
+func (f *fileDB) SaveURLArray(ctx context.Context, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
+	fileMap, _ := f.get()
+
+	for i, item := range urlBatch {
+		temp := strings.Split(item.ShortURL, "/")
+		urlBatch[i].ShortURL = temp[len(temp)-1]
+	}
+
+	for _, v := range fileMap[uid] {
+		for _, item := range urlBatch {
+			if v.OriginalURL != item.OriginalURL {
+				fileMap[uid] = append(fileMap[uid], entity.DBMapFilling{
+					OriginalURL: item.OriginalURL,
+					ShortURL:    item.ShortURL,
+					Deleted:     false,
+				})
+			}
+		}
+	}
+	if errSave := f.saveToFile(fileMap); errSave != nil {
+		log.Println(errSave)
+		return errSave
+	}
+	ctx.Done()
+
 	return nil
 }

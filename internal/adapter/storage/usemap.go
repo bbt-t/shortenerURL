@@ -46,6 +46,9 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 
 	for _, v := range m.mapURL {
 		for _, val := range v {
+			if k == val.ShortURL && val.Deleted {
+				return "", errDBUnknownID
+			}
 			if k == val.ShortURL {
 				result = val.OriginalURL
 			}
@@ -54,6 +57,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 			}
 		}
 	}
+
 	if result == "" {
 		return "", errDBUnknownID
 	}
@@ -110,8 +114,6 @@ func (m *mapDB) PingDB() error {
 }
 
 func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
-	//inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-
 	for i, item := range m.mapURL[uid] {
 		for _, v := range inpURLs {
 			if item.ShortURL == v {

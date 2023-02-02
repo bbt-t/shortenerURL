@@ -3,12 +3,13 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/internal/adapter/storage"
-	"github.com/bbt-t/shortenerURL/pkg"
 	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/bbt-t/shortenerURL/internal/adapter/storage"
+	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 )
