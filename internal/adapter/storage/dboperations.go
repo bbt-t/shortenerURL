@@ -162,9 +162,7 @@ func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []en
 	return nil
 }
 
-// ////// с такой проходит 1/3 14inc /////////////
 func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpURLs []string) error {
-	//inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
 	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
 
 	fail := func(err error) error {

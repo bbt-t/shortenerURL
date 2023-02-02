@@ -34,7 +34,7 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/
-	del := NewDeleteHandler(s.s, 10)
+	//del := NewDeleteHandler(s.s, 10)
 	route := chi.NewRouter()
 	route.Use(
 		middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)
@@ -56,7 +56,7 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 		r.Get("/{id}", s.recoverOriginalURL)
 		r.Get("/api/user/urls", s.recoverAllOriginalURLByUser)
 
-		r.Delete("/api/user/urls", del.Handle) //s.deleteURL)
+		r.Delete("/api/user/urls", s.deleteURL) //del.Handle) //s.deleteURL)
 
 		r.Post("/api/shorten/batch", s.buildURLBatch)
 		r.Post("/api/shorten", s.composeNewShortURLJson)
