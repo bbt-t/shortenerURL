@@ -1,12 +1,10 @@
 package storage
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -36,14 +34,14 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 	}
 }
 
-func (d *sqlDatabase) NewUser(userID uuid.UUID) {
+func (d *sqlDatabase) NewUser(uid uuid.UUID) {
 	/*
 		Adds new user.
 	*/
-	if checkUser(d.db, userID) {
+	if checkUser(d.db, uid) {
 		return
 	}
-	addNewUser(d.db, userID)
+	addNewUser(d.db, uid)
 }
 
 func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
@@ -58,40 +56,19 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+func (d *sqlDatabase) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]string, error) {
 	/*
 		Gets all pairs "original" - "short" urls previously saved by the user.
 	*/
-	var resultStructs []entity.URLs
-
-	err := d.db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-	if len(resultStructs) == 0 {
-		return nil, errDBEmpty
-	}
-	urlArray := make([]map[string]string, len(resultStructs))
-
-	for _, item := range resultStructs {
-		temp := make(map[string]string, 2)
-
-		data, _ := json.Marshal(item)
-		_ = json.Unmarshal(data, &temp)
-
-		temp["short_url"] = fmt.Sprintf("%s/%s", baseURL, temp["short_url"])
-		urlArray = append(urlArray, temp)
-	}
-
-	return urlArray, nil
+	result, err := getOriginalURLArray(d.db, uid, baseURL)
+	return result, err
 }
 
-func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
+func (d *sqlDatabase) SaveShortURL(uid uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adding info to the DB.
 	*/
-	err := saveURL(d.db, userID, shortURL, originalURL)
+	err := saveURL(d.db, uid, shortURL, originalURL)
 	return err
 }
 
@@ -108,24 +85,13 @@ func (d *sqlDatabase) PingDB() error {
 	return err
 }
 
-func (d *sqlDatabase) DelURLArray(inpJSON []byte, uid string) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-
-	for _, v := range inpURLs {
-		_, err := d.db.NamedExec(`UPDATE items SET removed=:removed WHERE id=:id AND user_id=:user_id`,
-			map[string]interface{}{
-				"removed": true,
-				"id":      v,
-				"user_id": uid,
-			})
-		if err != nil {
-			return errDBUnknownID
-		}
-	}
-	return nil
+func (d *sqlDatabase) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
+	//err := deleteURLArray(ctx, d.db, uid, inpJSON)
+	err := deleteURLArray(ctx, d.db, uid, inpURLs)
+	return err
 }
 
-func (d *sqlDatabase) SaveURLArray(uid uuid.UUID, inpURL []entity.URLBatchInp) error {
-	err := saveURLBatch(d.db, uid, inpURL)
+func (d *sqlDatabase) SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error {
+	err := saveURLBatch(ctx, d.db, uid, inpURL)
 	return err
 }

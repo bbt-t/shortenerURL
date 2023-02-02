@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -27,23 +30,26 @@ func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
 		Makes a request (selection of the original url by short) to the DB.
 		return: original url or error
 	*/
-	var result string
+	var result entity.CheckURL
 
 	err := db.Get(
 		&result,
-		"SELECT original_url FROM items WHERE short_url=$1",
+		"SELECT original_url, deleted FROM items WHERE short_url=$1",
 		shortURL,
 	)
-	return result, err
+	if result.Deleted {
+		return "", errDeleted
+	}
+	return result.OriginalURL, err
 }
 
-func addNewUser(db *sqlx.DB, userID uuid.UUID) {
+func addNewUser(db *sqlx.DB, uid uuid.UUID) {
 	/*
 		Adds a new user to the DB.
-		param userID: UUID issued when receiving the cookie (middleware)
+		param uid: UUID issued when receiving the cookie (middleware)
 	*/
 	info := map[string]interface{}{
-		"user_id":   userID,
+		"user_id":   uid,
 		"create_at": time.Now(),
 	}
 	if _, err := db.NamedExec(
@@ -54,13 +60,13 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 	}
 }
 
-func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error {
+func saveURL(db *sqlx.DB, uid uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adds short url to DB.
 	*/
 	var check bool
 	info := map[string]interface{}{
-		"user_id":      userID,
+		"user_id":      uid,
 		"original_url": originalURL,
 		"short_url":    shortURL,
 	}
@@ -68,7 +74,7 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 	if err := db.Get(
 		&check,
 		"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
-		userID,
+		uid,
 		originalURL,
 	); err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %+v", err)
@@ -88,6 +94,32 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 		log.Printf("ERRER : %+v", err)
 	}
 	return err
+}
+
+func getOriginalURLArray(db *sqlx.DB, uid uuid.UUID, baseURL string) ([]map[string]string, error) {
+	var resultStructs []entity.URLs
+
+	err := db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", uid)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	if len(resultStructs) == 0 {
+		return nil, errDBEmpty
+	}
+	urlArray := make([]map[string]string, len(resultStructs))
+
+	for _, item := range resultStructs {
+		temp := make(map[string]string, 2)
+
+		data, _ := json.Marshal(item)
+		_ = json.Unmarshal(data, &temp)
+
+		temp["short_url"] = fmt.Sprintf("%s/%s", baseURL, temp["short_url"])
+		urlArray = append(urlArray, temp)
+	}
+
+	return urlArray, nil
 }
 
 func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
@@ -115,19 +147,45 @@ func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]st
 	return urlArray
 }
 
-func saveURLBatch(db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
+func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
 	for i, item := range urlBatch {
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 		urlBatch[i].UserID = uid
 	}
+	query := `
+			INSERT INTO items (user_id, original_url, short_url) 
+			VALUES (:user_id, :original_url, :short_url)
+			`
+	if rows, err := db.NamedQueryContext(ctx, query, urlBatch); rows.Err() != nil {
+		return err
+	}
+	return nil
+}
 
-	query := "INSERT INTO items (user_id, original_url, short_url) VALUES (:user_id, :original_url, :short_url)"
-	for _, chunk := range urlBatch {
-		if _, err := db.NamedExec(query, &chunk); err != nil {
-			fmt.Println(err)
-			return err
+func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpURLs []string) error {
+	qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
+
+	fail := func(err error) error {
+		log.Println("FAIL UPDATE --> ROLLBACK")
+		return fmt.Errorf("try update: %v", err)
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fail(err)
+	}
+	defer tx.Rollback()
+
+	for _, v := range inpURLs {
+		var id string
+		if err := tx.QueryRowContext(ctx, qtx, uid, v).Scan(&id); err != nil {
+			return fail(errors.New("NOT FOUND --> rollback"))
 		}
 	}
+	if err = tx.Commit(); err != nil {
+		return fail(err)
+	}
+
 	return nil
 }

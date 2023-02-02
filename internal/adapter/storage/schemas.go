@@ -15,4 +15,5 @@ CREATE TABLE IF NOT EXISTS items (
     deleted bool not null DEFAULT false
 );
 CREATE INDEX IF NOT EXISTS idx_user_id ON users (user_id);
+CREATE INDEX IF NOT EXISTS idx_url_id ON items (id);
 `
