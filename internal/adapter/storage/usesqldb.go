@@ -2,12 +2,12 @@ package storage
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

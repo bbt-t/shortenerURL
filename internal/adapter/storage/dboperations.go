@@ -60,31 +60,6 @@ func saveURL(db *pgxpool.Pool, userID uuid.UUID, shortURL, originalURL string) e
 	/*
 		Adds short url to DB.
 	*/
-	//var check bool
-	//if err := db.Get(
-	//	&check,
-	//	"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
-	//	userID,
-	//	originalURL,
-	//); err != nil && err != sql.ErrNoRows {
-	//	log.Printf("error checking if row exists %+v", err)
-	//}
-	//if check {
-	//	return errHTTPConflict
-	//}
-	//
-	//_, err := db.NamedExec(
-	//	`
-	//INSERT INTO items (user_id, original_url, short_url)
-	//VALUES (:user_id, :original_url, :short_url)
-	//`,
-	//	info,
-	//)
-	//if err != nil {
-	//	log.Printf("ERRER : %+v", err)
-	//}
-	//return err
-
 	ctx := context.Background()
 
 	var check bool
@@ -203,29 +178,6 @@ func saveURLBatch(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, urlBatch
 }
 
 func deleteURLArray(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, inpURLs []string) error {
-	//qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
-	//
-	//fail := func(err error) error {
-	//	log.Println("FAIL UPDATE --> ROLLBACK")
-	//	return fmt.Errorf("try update: %v", err)
-	//}
-	//
-	//tx, err := db.BeginTx(ctx, nil)
-	//if err != nil {
-	//	return fail(err)
-	//}
-	//defer tx.Rollback()
-	//
-	//for _, v := range inpURLs {
-	//	var id string
-	//	if err := tx.QueryRowContext(ctx, qtx, uid, v).Scan(&id); err != nil {
-	//		return fail(errors.New("NOT FOUND --> rollback"))
-	//	}
-	//}
-	//if err = tx.Commit(); err != nil {
-	//	return fail(err)
-	//}
-
 	_, err := db.Exec(
 		ctx,
 		"UPDATE items SET deleted=true WHERE user_id = $1 AND short_url = any($2::text[])",
