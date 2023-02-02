@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5"
@@ -203,8 +202,7 @@ func saveURLBatch(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, urlBatch
 	return err
 }
 
-func deleteURLArray(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, inpJSON []byte) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
+func deleteURLArray(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, inpURLs []string) error {
 	//qtx := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2 returning id"
 	//
 	//fail := func(err error) error {

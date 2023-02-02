@@ -87,8 +87,8 @@ func (d *sqlDatabase) PingDB() error {
 	return err
 }
 
-func (d *sqlDatabase) DelURLArray(ctx context.Context, uid uuid.UUID, inpJSON []byte) error {
-	err := deleteURLArray(ctx, d.db, uid, inpJSON)
+func (d *sqlDatabase) DelURLArray(ctx context.Context, userID uuid.UUID, inpURLs []string) error {
+	err := deleteURLArray(ctx, d.db, userID, inpURLs)
 	return err
 }
 
