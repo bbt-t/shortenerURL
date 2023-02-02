@@ -82,13 +82,13 @@ func (f *fileDB) get() (map[uuid.UUID][]entity.DBMapFilling, error) {
 	return data, nil
 }
 
-func (f *fileDB) NewUser(userID uuid.UUID) {
+func (f *fileDB) NewUser(uid uuid.UUID) {
 	/*
 		Create new user in DB.
 	*/
 
 	data, _ := f.get()
-	data[userID] = []entity.DBMapFilling{}
+	data[uid] = []entity.DBMapFilling{}
 	if errSave := f.saveToFile(data); errSave != nil {
 		log.Println(errSave)
 	}
@@ -126,12 +126,12 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (f *fileDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+func (f *fileDB) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]string, error) {
 	defer f.mutex.RUnlock()
 	fileMap, _ := f.get()
 	f.mutex.RLock()
 
-	allURL, ok := fileMap[userID]
+	allURL, ok := fileMap[uid]
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
@@ -145,7 +145,7 @@ func (f *fileDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[stri
 	return result, nil
 }
 
-func (f *fileDB) SaveShortURL(userID uuid.UUID, k, v string) error {
+func (f *fileDB) SaveShortURL(uid uuid.UUID, k, v string) error {
 	/*
 		Calling a func to save info to a file.
 	*/
@@ -157,7 +157,7 @@ func (f *fileDB) SaveShortURL(userID uuid.UUID, k, v string) error {
 		data = make(map[uuid.UUID][]entity.DBMapFilling) //map[uuid.UUID][]entity.DBMapFilling
 	}
 
-	for _, v := range data[userID] {
+	for _, v := range data[uid] {
 		if v.ShortURL == k {
 			return errHTTPConflict
 		}
@@ -165,7 +165,7 @@ func (f *fileDB) SaveShortURL(userID uuid.UUID, k, v string) error {
 	f.mutex.Unlock()
 
 	f.mutex.Lock()
-	data[userID] = append(data[userID], entity.DBMapFilling{
+	data[uid] = append(data[uid], entity.DBMapFilling{
 		OriginalURL: v,
 		ShortURL:    k,
 		Deleted:     false,

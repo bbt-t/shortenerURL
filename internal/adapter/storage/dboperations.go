@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
+
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -42,13 +43,13 @@ func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
 	return result.OriginalURL, err
 }
 
-func addNewUser(db *sqlx.DB, userID uuid.UUID) {
+func addNewUser(db *sqlx.DB, uid uuid.UUID) {
 	/*
 		Adds a new user to the DB.
-		param userID: UUID issued when receiving the cookie (middleware)
+		param uid: UUID issued when receiving the cookie (middleware)
 	*/
 	info := map[string]interface{}{
-		"user_id":   userID,
+		"user_id":   uid,
 		"create_at": time.Now(),
 	}
 	if _, err := db.NamedExec(
@@ -59,13 +60,13 @@ func addNewUser(db *sqlx.DB, userID uuid.UUID) {
 	}
 }
 
-func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error {
+func saveURL(db *sqlx.DB, uid uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adds short url to DB.
 	*/
 	var check bool
 	info := map[string]interface{}{
-		"user_id":      userID,
+		"user_id":      uid,
 		"original_url": originalURL,
 		"short_url":    shortURL,
 	}
@@ -73,7 +74,7 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 	if err := db.Get(
 		&check,
 		"SELECT EXISTS(SELECT 1 FROM items WHERE user_id=$1 AND original_url=$2)",
-		userID,
+		uid,
 		originalURL,
 	); err != nil && err != sql.ErrNoRows {
 		log.Printf("error checking if row exists %+v", err)
@@ -95,10 +96,10 @@ func saveURL(db *sqlx.DB, userID uuid.UUID, shortURL, originalURL string) error 
 	return err
 }
 
-func getOriginalURLArray(db *sqlx.DB, userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+func getOriginalURLArray(db *sqlx.DB, uid uuid.UUID, baseURL string) ([]map[string]string, error) {
 	var resultStructs []entity.URLs
 
-	err := db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", userID)
+	err := db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", uid)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -188,31 +189,3 @@ func deleteURLArray(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpURLs []s
 
 	return nil
 }
-
-//func deleteURLArrayQueue(ctx context.Context, db *sqlx.DB, uid uuid.UUID, inpURLs []string) error {
-//
-//	query := "UPDATE items SET deleted=true WHERE user_id=$1 AND short_url=$2"
-//
-//	newUPDQueue := queue.NewQueue("Batch Update")
-//	var jobs []queue.Job
-//
-//	for _, update := range inpURLs {
-//		upd := update
-//		action := func() error {
-//			if _, err := db.ExecContext(ctx, query, uid, upd); err != nil {
-//				log.Println(err)
-//				return err
-//			}
-//			return nil
-//		}
-//		jobs = append(jobs, queue.Job{
-//			Name:   fmt.Sprintf("Importing new update: %s", upd),
-//			Action: action,
-//		})
-//	}
-//	newUPDQueue.AddJobs(jobs)
-//	worker := queue.NewWorker(newUPDQueue)
-//	worker.DoWork()
-//
-//	return nil
-//}

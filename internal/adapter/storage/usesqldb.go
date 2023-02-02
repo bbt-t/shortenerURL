@@ -34,14 +34,14 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 	}
 }
 
-func (d *sqlDatabase) NewUser(userID uuid.UUID) {
+func (d *sqlDatabase) NewUser(uid uuid.UUID) {
 	/*
 		Adds new user.
 	*/
-	if checkUser(d.db, userID) {
+	if checkUser(d.db, uid) {
 		return
 	}
-	addNewUser(d.db, userID)
+	addNewUser(d.db, uid)
 }
 
 func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
@@ -56,19 +56,19 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+func (d *sqlDatabase) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]string, error) {
 	/*
 		Gets all pairs "original" - "short" urls previously saved by the user.
 	*/
-	result, err := getOriginalURLArray(d.db, userID, baseURL)
+	result, err := getOriginalURLArray(d.db, uid, baseURL)
 	return result, err
 }
 
-func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
+func (d *sqlDatabase) SaveShortURL(uid uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adding info to the DB.
 	*/
-	err := saveURL(d.db, userID, shortURL, originalURL)
+	err := saveURL(d.db, uid, shortURL, originalURL)
 	return err
 }
 

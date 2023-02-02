@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
+
 	"github.com/gofrs/uuid"
 )
 
@@ -28,11 +29,11 @@ func NewMapDB() DatabaseRepository {
 	}
 }
 
-func (m *mapDB) NewUser(userID uuid.UUID) {
+func (m *mapDB) NewUser(uid uuid.UUID) {
 	defer m.mutex.Unlock()
 	m.mutex.Lock()
-	if _, ok := m.mapURL[userID]; !ok {
-		m.mapURL[userID] = []entity.DBMapFilling{}
+	if _, ok := m.mapURL[uid]; !ok {
+		m.mapURL[uid] = []entity.DBMapFilling{}
 	}
 }
 
@@ -64,7 +65,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
+func (m *mapDB) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]string, error) {
 	/*
 		Take all saved urls.
 	*/
@@ -72,7 +73,7 @@ func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[strin
 	defer m.mutex.RUnlock()
 	m.mutex.RLock()
 
-	allURL, ok := m.mapURL[userID]
+	allURL, ok := m.mapURL[uid]
 	if !ok || len(allURL) == 0 {
 		return nil, errDBEmpty
 	}
@@ -86,12 +87,12 @@ func (m *mapDB) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[strin
 	return result, nil
 }
 
-func (m *mapDB) SaveShortURL(userID uuid.UUID, k, v string) error {
+func (m *mapDB) SaveShortURL(uid uuid.UUID, k, v string) error {
 	/*
 		Write info to the map by key - value.
 	*/
 	m.mutex.RLock()
-	for _, v := range m.mapURL[userID] {
+	for _, v := range m.mapURL[uid] {
 		if v.ShortURL == k {
 			return errHTTPConflict
 		}
@@ -99,7 +100,7 @@ func (m *mapDB) SaveShortURL(userID uuid.UUID, k, v string) error {
 	m.mutex.RUnlock()
 
 	m.mutex.Lock()
-	m.mapURL[userID] = append(m.mapURL[userID], entity.DBMapFilling{
+	m.mapURL[uid] = append(m.mapURL[uid], entity.DBMapFilling{
 		OriginalURL: v,
 		ShortURL:    k,
 		Deleted:     false,
