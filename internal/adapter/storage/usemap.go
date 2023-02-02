@@ -7,8 +7,6 @@ import (
 	"sync"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
-	"github.com/bbt-t/shortenerURL/pkg"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -48,6 +46,9 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 
 	for _, v := range m.mapURL {
 		for _, val := range v {
+			if k == val.ShortURL && val.Deleted {
+				return "", errDBUnknownID
+			}
 			if k == val.ShortURL {
 				result = val.OriginalURL
 			}
@@ -56,6 +57,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 			}
 		}
 	}
+
 	if result == "" {
 		return "", errDBUnknownID
 	}
@@ -111,9 +113,7 @@ func (m *mapDB) PingDB() error {
 	return nil
 }
 
-func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpJSON []byte) error {
-	inpURLs := pkg.ConvertStrToSlice(string(inpJSON))
-
+func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
 	for i, item := range m.mapURL[uid] {
 		for _, v := range inpURLs {
 			if item.ShortURL == v {
