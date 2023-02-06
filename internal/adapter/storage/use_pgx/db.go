@@ -1,47 +1,49 @@
-package storage
+package use_pgx
 
 import (
 	"context"
 	"log"
 
+	st "github.com/bbt-t/shortenerURL/internal/adapter/storage"
 	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type sqlDatabase struct {
-	db *sqlx.DB
+	db *pgxpool.Pool
 }
 
-func NewSQLDatabase(dsn string) DatabaseRepository {
+func NewSQLDatabase(dsn string) st.DatabaseRepository {
 	/*
 		Selects DB and initializing. Create tables.
 		param nameDB: received parameter (flag) to select db
 		return: db-object or nil
 	*/
-	db, err := sqlx.Connect("postgres", dsn)
+	ctx := context.Background()
+	db, err := pgxpool.New(ctx, dsn)
 
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	createTable(db, _tableItems /* SQL command */)
+	createTable(ctx, db, st.TableItems /* SQL command */)
 	return &sqlDatabase{
 		db: db,
 	}
 }
 
-func (d *sqlDatabase) NewUser(uid uuid.UUID) {
+func (d *sqlDatabase) NewUser(userID uuid.UUID) {
 	/*
 		Adds new user.
 	*/
-	if checkUser(d.db, uid) {
+	if checkUser(d.db, userID) {
 		return
 	}
-	addNewUser(d.db, uid)
+	addNewUser(d.db, userID)
 }
 
 func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
@@ -56,19 +58,19 @@ func (d *sqlDatabase) GetOriginalURL(k string) (string, error) {
 	return result, nil
 }
 
-func (d *sqlDatabase) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]string, error) {
+func (d *sqlDatabase) GetURLArrayByUser(userID uuid.UUID, baseURL string) ([]map[string]string, error) {
 	/*
 		Gets all pairs "original" - "short" urls previously saved by the user.
 	*/
-	result, err := getOriginalURLArray(d.db, uid, baseURL)
+	result, err := getOriginalURLArray(d.db, userID, baseURL)
 	return result, err
 }
 
-func (d *sqlDatabase) SaveShortURL(uid uuid.UUID, shortURL, originalURL string) error {
+func (d *sqlDatabase) SaveShortURL(userID uuid.UUID, shortURL, originalURL string) error {
 	/*
 		Adding info to the DB.
 	*/
-	err := saveURL(d.db, uid, shortURL, originalURL)
+	err := saveURL(d.db, userID, shortURL, originalURL)
 	return err
 }
 
@@ -76,7 +78,8 @@ func (d *sqlDatabase) PingDB() error {
 	/*
 		Checking connection with ctx.Background.
 	*/
-	err := d.db.Ping()
+	ctx := context.Background()
+	err := d.db.Ping(ctx)
 	if err != nil {
 		log.Println(err)
 	} else {
@@ -85,9 +88,8 @@ func (d *sqlDatabase) PingDB() error {
 	return err
 }
 
-func (d *sqlDatabase) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
-	//err := deleteURLArray(ctx, d.db, uid, inpJSON)
-	err := deleteURLArray(ctx, d.db, uid, inpURLs)
+func (d *sqlDatabase) DelURLArray(ctx context.Context, userID uuid.UUID, inpURLs []string) error {
+	err := deleteURLArray(ctx, d.db, userID, inpURLs)
 	return err
 }
 

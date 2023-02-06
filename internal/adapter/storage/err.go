@@ -3,8 +3,8 @@ package storage
 import "errors"
 
 var (
-	errDBUnknownID  = errors.New("no such id in DB")
-	errDBEmpty      = errors.New("db is empty")
-	errHTTPConflict = errors.New("conflict: this URL has already been shortened before")
-	errDeleted      = errors.New("deleted")
+	ErrDBUnknownID  = errors.New("no such id in DB")
+	ErrDBEmpty      = errors.New("db is empty")
+	ErrHTTPConflict = errors.New("conflict: this URL has already been shortened before")
+	ErrDeleted      = errors.New("deleted")
 )

@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"hash/fnv"
 	"log"
@@ -67,4 +68,17 @@ func ConvertStrToSlice(strToChange string) []string {
 	result := strings.Split(strings.ReplaceAll(temp, "\"", ""), ",")
 
 	return result
+}
+
+func ConvertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
+	var urlArray []map[string]string
+
+	for k, v := range mapURL {
+		temp := map[string]string{
+			"short_url":    fmt.Sprintf("%s/%s", baseURL, k),
+			"original_url": v,
+		}
+		urlArray = append(urlArray, temp)
+	}
+	return urlArray
 }

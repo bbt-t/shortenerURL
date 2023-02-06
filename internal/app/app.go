@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"github.com/bbt-t/shortenerURL/internal/adapter/storage/use_pgx"
+	"github.com/bbt-t/shortenerURL/internal/adapter/storage/use_sqlx"
 	"log"
 	"os"
 	"os/signal"
@@ -23,7 +25,12 @@ func Run(cfg *config.ServerCfg) {
 
 	switch cfg.DBused {
 	case "pg":
-		repo = storage.NewSQLDatabase(cfg.DBConnectURL)
+		if cfg.UsePGXDriver != "" {
+			repo = use_pgx.NewSQLDatabase(cfg.DBConnectURL)
+		} else {
+			repo = use_sqlx.NewSQLDatabase(cfg.DBConnectURL)
+		}
+
 	case "file":
 		repo = storage.NewFileDB(cfg.FilePath)
 	default:

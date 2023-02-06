@@ -1,6 +1,6 @@
 package storage
 
-const _tableItems = `
+const TableItems = `
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS users (
 	user_id UUID PRIMARY KEY,

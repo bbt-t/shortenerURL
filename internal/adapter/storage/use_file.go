@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"github.com/bbt-t/shortenerURL/pkg"
 	"log"
 	"os"
 	"strings"
@@ -110,7 +111,7 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 	for _, v := range fileMap {
 		for _, val := range v {
 			if k == val.ShortURL && val.Deleted {
-				return "", errDBUnknownID
+				return "", ErrDBUnknownID
 			}
 			if k == val.ShortURL {
 				result = val.OriginalURL
@@ -121,7 +122,7 @@ func (f *fileDB) GetOriginalURL(k string) (string, error) {
 		}
 	}
 	if result == "" {
-		return "", errDBUnknownID
+		return "", ErrDBUnknownID
 	}
 	return result, nil
 }
@@ -133,14 +134,14 @@ func (f *fileDB) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]
 
 	allURL, ok := fileMap[uid]
 	if !ok || len(allURL) == 0 {
-		return nil, errDBEmpty
+		return nil, ErrDBEmpty
 	}
 
 	convInfo := make(map[string]string)
 	for _, item := range allURL {
 		convInfo[item.ShortURL] = item.OriginalURL
 	}
-	result := convertToArrayMap(convInfo, baseURL)
+	result := pkg.ConvertToArrayMap(convInfo, baseURL)
 
 	return result, nil
 }
@@ -159,7 +160,7 @@ func (f *fileDB) SaveShortURL(uid uuid.UUID, k, v string) error {
 
 	for _, v := range data[uid] {
 		if v.ShortURL == k {
-			return errHTTPConflict
+			return ErrHTTPConflict
 		}
 	}
 	f.mutex.Unlock()
@@ -202,14 +203,8 @@ func (f *fileDB) PingDB() error {
 
 func (f *fileDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
 	fileMap, _ := f.get()
-	for i, item := range fileMap[uid] {
-		for _, v := range inpURLs {
-			if item.ShortURL == v {
-				fileMap[uid][i].Deleted = true
-			}
-		}
-	}
-	if errSave := f.saveToFile(fileMap); errSave != nil {
+
+	if errSave := f.saveToFile(deleteURLArrayMap(fileMap, uid, inpURLs)); errSave != nil {
 		log.Println(errSave)
 		return errSave
 	}
@@ -226,18 +221,7 @@ func (f *fileDB) SaveURLArray(ctx context.Context, uid uuid.UUID, urlBatch []ent
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 	}
 
-	for _, v := range fileMap[uid] {
-		for _, item := range urlBatch {
-			if v.OriginalURL != item.OriginalURL {
-				fileMap[uid] = append(fileMap[uid], entity.DBMapFilling{
-					OriginalURL: item.OriginalURL,
-					ShortURL:    item.ShortURL,
-					Deleted:     false,
-				})
-			}
-		}
-	}
-	if errSave := f.saveToFile(fileMap); errSave != nil {
+	if errSave := f.saveToFile(saveURLBatchMap(fileMap, uid, urlBatch)); errSave != nil {
 		log.Println(errSave)
 		return errSave
 	}
