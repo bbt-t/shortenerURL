@@ -34,6 +34,7 @@ func (s ShortenerHandler) InitRoutes() *chi.Mux {
 	/*
 		Initialize the server, setting preferences and add routes.
 	*/
+	//del := NewDeleteHandler(s.s, 10)
 	route := chi.NewRouter()
 	route.Use(
 		middleware.RealIP, // <- (!) Only if a reverse proxy is used (e.g. nginx) (!)

@@ -13,6 +13,7 @@ type ServerCfg struct {
 	FilePath      string `env:"FILE_STORAGE_PATH"`
 	DBConnectURL  string `env:"DATABASE_DSN"` //envDefault:"host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"`
 	DBused        string
+	UsePGXDriver  string
 }
 
 func NewConfServ() *ServerCfg {
@@ -25,6 +26,7 @@ func NewConfServ() *ServerCfg {
 	flag.StringVar(&cfg.BaseURL, "b", "", "base url")
 	flag.StringVar(&cfg.FilePath, "f", "", "file path")
 	flag.StringVar(&cfg.DBConnectURL, "d", "", "postgres DSN (url)")
+	flag.StringVar(&cfg.UsePGXDriver, "p", "", "use pgx driver")
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("%+v\n", err)

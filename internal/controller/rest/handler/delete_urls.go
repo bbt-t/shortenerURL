@@ -3,9 +3,10 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/bbt-t/shortenerURL/pkg"
 	"io"
 	"net/http"
+
+	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 )
@@ -24,9 +25,9 @@ func (s ShortenerHandler) deleteURL(w http.ResponseWriter, r *http.Request) {
 	}
 	userID, _ := uuid.FromString(fmt.Sprintf("%v", r.Context().Value("user_id")))
 
+	ids := pkg.ConvertStrToSlice(string(payload))
 	ctx := context.Background()
 
-	ids := pkg.ConvertStrToSlice(string(payload))
 	go s.s.DelURLArray(ctx, userID, ids)
 
 	w.WriteHeader(http.StatusAccepted)

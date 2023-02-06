@@ -1,4 +1,4 @@
-package storage
+package usepgx
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 
+	st "github.com/bbt-t/shortenerURL/internal/adapter/storage"
 	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
@@ -40,7 +41,7 @@ func getOriginalURL(db *pgxpool.Pool, shortURL string) (string, error) {
 		shortURL,
 	).Scan(&result.OriginalURL, &result.Deleted)
 	if result.Deleted {
-		return "", errDeleted
+		return "", st.ErrDeleted
 	}
 	return result.OriginalURL, err
 }
@@ -72,7 +73,7 @@ func saveURL(db *pgxpool.Pool, userID uuid.UUID, shortURL, originalURL string) e
 		log.Printf("error checking if row exists %+v", err)
 	}
 	if check {
-		return errHTTPConflict
+		return st.ErrHTTPConflict
 	}
 
 	_, err := db.Exec(
@@ -82,12 +83,14 @@ func saveURL(db *pgxpool.Pool, userID uuid.UUID, shortURL, originalURL string) e
 		originalURL,
 		shortURL,
 	)
-
 	return err
 }
 
 func getOriginalURLArray(db *pgxpool.Pool, userID uuid.UUID, baseURL string) ([]map[string]string, error) {
-	var resultStructs []*entity.URLs // *???
+	var (
+		resultStructs []*entity.URLs // *???
+		urlArray      []map[string]string
+	)
 	ctx := context.Background()
 	rows, err := db.Query(
 		ctx,
@@ -108,9 +111,8 @@ func getOriginalURLArray(db *pgxpool.Pool, userID uuid.UUID, baseURL string) ([]
 	}
 
 	if len(resultStructs) == 0 {
-		return nil, errDBEmpty
+		return nil, st.ErrDBEmpty
 	}
-	urlArray := make([]map[string]string, len(resultStructs))
 
 	for _, item := range resultStructs {
 		temp := make(map[string]string, 2)
@@ -121,7 +123,6 @@ func getOriginalURLArray(db *pgxpool.Pool, userID uuid.UUID, baseURL string) ([]
 		temp["short_url"] = fmt.Sprintf("%s/%s", baseURL, temp["short_url"])
 		urlArray = append(urlArray, temp)
 	}
-
 	return urlArray, nil
 }
 
@@ -136,19 +137,6 @@ func checkUser(db *pgxpool.Pool, uid uuid.UUID) (exists bool) {
 		log.Printf("error checking if row exists %+v", err)
 	}
 	return exists
-}
-
-func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
-	var urlArray []map[string]string
-
-	for k, v := range mapURL {
-		temp := map[string]string{
-			"short_url":    fmt.Sprintf("%s/%s", baseURL, k),
-			"original_url": v,
-		}
-		urlArray = append(urlArray, temp)
-	}
-	return urlArray
 }
 
 func saveURLBatch(ctx context.Context, db *pgxpool.Pool, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {
