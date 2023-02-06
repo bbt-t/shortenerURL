@@ -31,6 +31,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
+	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jackc/pgx/v5 v5.2.0 // indirect
 	github.com/jackc/puddle/v2 v2.1.2 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
