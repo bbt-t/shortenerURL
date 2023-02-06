@@ -1,9 +1,10 @@
-package storage
+package usesqlx
 
 import (
 	"context"
 	"log"
 
+	st "github.com/bbt-t/shortenerURL/internal/adapter/storage"
 	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
@@ -15,7 +16,7 @@ type sqlDatabase struct {
 	db *sqlx.DB
 }
 
-func NewSQLDatabase(dsn string) DatabaseRepository {
+func NewSQLDatabase(dsn string) st.DatabaseRepository {
 	/*
 		Selects DB and initializing. Create tables.
 		param nameDB: received parameter (flag) to select db
@@ -28,7 +29,7 @@ func NewSQLDatabase(dsn string) DatabaseRepository {
 		return nil
 	}
 
-	createTable(db, _tableItems /* SQL command */)
+	createTable(db, st.TableItems /* SQL command */)
 	return &sqlDatabase{
 		db: db,
 	}

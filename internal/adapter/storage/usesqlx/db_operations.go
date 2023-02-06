@@ -1,4 +1,4 @@
-package storage
+package usesqlx
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	st "github.com/bbt-t/shortenerURL/internal/adapter/storage"
 	"log"
 	"strings"
 	"time"
@@ -38,7 +39,7 @@ func getOriginalURL(db *sqlx.DB, shortURL string) (string, error) {
 		shortURL,
 	)
 	if result.Deleted {
-		return "", errDeleted
+		return "", st.ErrDeleted
 	}
 	return result.OriginalURL, err
 }
@@ -80,7 +81,7 @@ func saveURL(db *sqlx.DB, uid uuid.UUID, shortURL, originalURL string) error {
 		log.Printf("error checking if row exists %+v", err)
 	}
 	if check {
-		return errHTTPConflict
+		return st.ErrHTTPConflict
 	}
 
 	_, err := db.NamedExec(
@@ -97,7 +98,10 @@ func saveURL(db *sqlx.DB, uid uuid.UUID, shortURL, originalURL string) error {
 }
 
 func getOriginalURLArray(db *sqlx.DB, uid uuid.UUID, baseURL string) ([]map[string]string, error) {
-	var resultStructs []entity.URLs
+	var (
+		resultStructs []entity.URLs
+		urlArray      []map[string]string
+	)
 
 	err := db.Select(&resultStructs, "SELECT original_url, short_url FROM items WHERE user_id=$1", uid)
 	if err != nil {
@@ -105,9 +109,8 @@ func getOriginalURLArray(db *sqlx.DB, uid uuid.UUID, baseURL string) ([]map[stri
 		return nil, err
 	}
 	if len(resultStructs) == 0 {
-		return nil, errDBEmpty
+		return nil, st.ErrDBEmpty
 	}
-	urlArray := make([]map[string]string, len(resultStructs))
 
 	for _, item := range resultStructs {
 		temp := make(map[string]string, 2)
@@ -132,19 +135,6 @@ func checkUser(db *sqlx.DB, uid uuid.UUID) (exists bool) {
 		log.Printf("error checking if row exists %+v", err)
 	}
 	return exists
-}
-
-func convertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
-	var urlArray []map[string]string
-
-	for k, v := range mapURL {
-		temp := map[string]string{
-			"short_url":    fmt.Sprintf("%s/%s", baseURL, k),
-			"original_url": v,
-		}
-		urlArray = append(urlArray, temp)
-	}
-	return urlArray
 }
 
 func saveURLBatch(ctx context.Context, db *sqlx.DB, uid uuid.UUID, urlBatch []entity.URLBatchInp) error {

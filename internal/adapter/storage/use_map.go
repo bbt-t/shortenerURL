@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/bbt-t/shortenerURL/internal/entity"
+	"github.com/bbt-t/shortenerURL/pkg"
 
 	"github.com/gofrs/uuid"
 )
@@ -15,8 +16,8 @@ type mapDB struct {
 	/*
 		Simple DB stub.
 	*/
-	mapURL map[uuid.UUID][]entity.DBMapFilling
 	mutex  *sync.RWMutex
+	mapURL map[uuid.UUID][]entity.DBMapFilling
 }
 
 func NewMapDB() DatabaseRepository {
@@ -48,7 +49,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 	for _, v := range m.mapURL {
 		for _, val := range v {
 			if k == val.ShortURL && val.Deleted {
-				return "", errDBUnknownID
+				return "", ErrDBUnknownID
 			}
 			if k == val.ShortURL {
 				result = val.OriginalURL
@@ -60,7 +61,7 @@ func (m *mapDB) GetOriginalURL(k string) (string, error) {
 	}
 
 	if result == "" {
-		return "", errDBUnknownID
+		return "", ErrDBUnknownID
 	}
 	return result, nil
 }
@@ -75,14 +76,14 @@ func (m *mapDB) GetURLArrayByUser(uid uuid.UUID, baseURL string) ([]map[string]s
 
 	allURL, ok := m.mapURL[uid]
 	if !ok || len(allURL) == 0 {
-		return nil, errDBEmpty
+		return nil, ErrDBEmpty
 	}
 
 	convInfo := make(map[string]string)
 	for _, item := range allURL {
 		convInfo[item.ShortURL] = item.OriginalURL
 	}
-	result := convertToArrayMap(convInfo, baseURL)
+	result := pkg.ConvertToArrayMap(convInfo, baseURL)
 
 	return result, nil
 }
@@ -94,7 +95,7 @@ func (m *mapDB) SaveShortURL(uid uuid.UUID, k, v string) error {
 	m.mutex.RLock()
 	for _, v := range m.mapURL[uid] {
 		if v.ShortURL == k {
-			return errHTTPConflict
+			return ErrHTTPConflict
 		}
 	}
 	m.mutex.RUnlock()
@@ -115,13 +116,9 @@ func (m *mapDB) PingDB() error {
 }
 
 func (m *mapDB) DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error {
-	for i, item := range m.mapURL[uid] {
-		for _, v := range inpURLs {
-			if item.ShortURL == v {
-				m.mapURL[uid][i].Deleted = true
-			}
-		}
-	}
+	defer m.mutex.Unlock()
+	m.mutex.Lock()
+	m.mapURL = deleteURLArrayMap(m.mapURL, uid, inpURLs)
 	ctx.Done()
 	return nil
 }
@@ -131,18 +128,9 @@ func (m *mapDB) SaveURLArray(ctx context.Context, uid uuid.UUID, urlBatch []enti
 		temp := strings.Split(item.ShortURL, "/")
 		urlBatch[i].ShortURL = temp[len(temp)-1]
 	}
-
-	for _, v := range m.mapURL[uid] {
-		for _, item := range urlBatch {
-			if v.OriginalURL != item.OriginalURL {
-				m.mapURL[uid] = append(m.mapURL[uid], entity.DBMapFilling{
-					OriginalURL: item.OriginalURL,
-					ShortURL:    item.ShortURL,
-					Deleted:     false,
-				})
-			}
-		}
-	}
+	defer m.mutex.Unlock()
+	m.mutex.Lock()
+	m.mapURL = saveURLBatchMap(m.mapURL, uid, urlBatch)
 	ctx.Done()
 	return nil
 }
