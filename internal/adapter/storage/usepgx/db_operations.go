@@ -1,4 +1,4 @@
-package use_pgx
+package usepgx
 
 import (
 	"context"

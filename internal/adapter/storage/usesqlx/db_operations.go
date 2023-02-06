@@ -1,4 +1,4 @@
-package use_sqlx
+package usesqlx
 
 import (
 	"context"
