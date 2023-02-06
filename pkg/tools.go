@@ -71,6 +71,9 @@ func ConvertStrToSlice(strToChange string) []string {
 }
 
 func ConvertToArrayMap(mapURL map[string]string, baseURL string) []map[string]string {
+	/*
+		Changes the content in the map
+	*/
 	var urlArray []map[string]string
 
 	for k, v := range mapURL {
