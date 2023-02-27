@@ -19,7 +19,7 @@ type mapDB struct {
 	mutex  *sync.RWMutex
 }
 
-func NewMapDB() DatabaseRepository {
+func newMapDB() *mapDB {
 	/*
 		return: object with an empty map to write data.
 	*/

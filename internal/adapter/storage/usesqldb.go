@@ -15,7 +15,7 @@ type sqlDatabase struct {
 	db *sqlx.DB
 }
 
-func NewSQLDatabase(dsn string) DatabaseRepository {
+func newSQLDatabase(dsn string) *sqlDatabase {
 	/*
 		Selects DB and initializing. Create tables.
 		param nameDB: received parameter (flag) to select db

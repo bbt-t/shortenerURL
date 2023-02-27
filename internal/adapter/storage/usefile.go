@@ -22,7 +22,7 @@ type fileDB struct {
 	mutex      *sync.RWMutex
 }
 
-func NewFileDB(pathFile string) DatabaseRepository {
+func newFileDB(pathFile string) *fileDB {
 	/*
 		Initialize storage in file.
 		param pathFile: path to file (with full name)

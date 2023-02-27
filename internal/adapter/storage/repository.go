@@ -20,3 +20,15 @@ type DatabaseRepository interface {
 	DelURLArray(ctx context.Context, uid uuid.UUID, inpURLs []string) error
 	SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error
 }
+
+func NewDatabase(dsn string) DatabaseRepository {
+	return newSQLDatabase(dsn)
+}
+
+func NewMapDB() DatabaseRepository {
+	return newMapDB()
+}
+
+func NewFileDB(pathFile string) DatabaseRepository {
+	return newFileDB(pathFile)
+}

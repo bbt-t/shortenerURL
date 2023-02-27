@@ -23,7 +23,7 @@ func Run(cfg *config.ServerCfg) {
 
 	switch cfg.DBused {
 	case "pg":
-		repo = storage.NewSQLDatabase(cfg.DBConnectURL)
+		repo = storage.NewDatabase(cfg.DBConnectURL)
 	case "file":
 		repo = storage.NewFileDB(cfg.FilePath)
 	default:
