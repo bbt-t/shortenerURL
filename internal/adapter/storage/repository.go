@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 
+	"github.com/bbt-t/shortenerURL/internal/config"
 	"github.com/bbt-t/shortenerURL/internal/entity"
 
 	"github.com/gofrs/uuid"
@@ -21,14 +22,14 @@ type DatabaseRepository interface {
 	SaveURLArray(ctx context.Context, uid uuid.UUID, inpURL []entity.URLBatchInp) error
 }
 
-func NewDatabase(dsn string) DatabaseRepository {
-	return newSQLDatabase(dsn)
-}
-
-func NewMapDB() DatabaseRepository {
-	return newMapDB()
-}
-
-func NewFileDB(pathFile string) DatabaseRepository {
-	return newFileDB(pathFile)
+// NewConnector реализует фабричный метод.
+func NewConnector(cfg *config.ServerCfg) DatabaseRepository {
+	switch cfg.DBused {
+	case "pg":
+		return newSQLDatabase(cfg.DBConnectURL)
+	case "file":
+		return newFileDB(cfg.FilePath)
+	default:
+		return newMapDB()
+	}
 }

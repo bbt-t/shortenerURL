@@ -19,16 +19,8 @@ func Run(cfg *config.ServerCfg) {
 	/*
 		Creating usable objects via constructors for layers and start app.
 	*/
-	var repo storage.DatabaseRepository
 
-	switch cfg.DBused {
-	case "pg":
-		repo = storage.NewDatabase(cfg.DBConnectURL)
-	case "file":
-		repo = storage.NewFileDB(cfg.FilePath)
-	default:
-		repo = storage.NewMapDB()
-	}
+	repo := storage.NewConnector(cfg)
 	if err := repo.PingDB(); err != nil {
 		log.Fatal(err)
 	}
