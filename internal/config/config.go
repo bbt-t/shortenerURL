@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v8"
 )
 
 type ServerCfg struct {
